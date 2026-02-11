@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    tools:context="fragment_activity.HomeFragment">
+
+    <!-- The Toolbar you requested, added to the top of the screen -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_home"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/blue"
+        app:title="Home"
+        app:titleTextColor="@color/white" />
+
+    <!-- The RecyclerView is now positioned below the toolbar -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/feeds_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar_home"
+        tools:listitem="@layout/feed_item" />
+
+</RelativeLayout>

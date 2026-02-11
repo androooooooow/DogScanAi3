@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/slide_3_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/slide_image"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/camera_icon"
+        android:contentDescription="@string/camera_slide_image" />
+
+    <TextView
+        android:id="@+id/slide_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Camera Feature"
+        android:textSize="20sp"
+        android:paddingTop="16dp" />
+
+    <TextView
+        android:id="@+id/slide_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You can grant camera permission to scan dogs, or skip."
+        android:textSize="16sp"
+        android:paddingTop="8dp" />
+
+    <Button
+        android:id="@+id/btn_request_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Grant Camera / Next"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="24dp"
+        android:visibility="gone"/>
+
+</LinearLayout>

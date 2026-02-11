@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">DogScanAi</string>
+
+    your original navigation drawer -->
+
+    <!-- For the new toolbar in Start.kt (can be the same text) -->
+    <string name="open">Open navigation drawer</string>
+    <string name="close">Close navigation drawer</string>
+    <string name="camera_slide_image">Camera Slide Image</string>
+
+</resources>
+

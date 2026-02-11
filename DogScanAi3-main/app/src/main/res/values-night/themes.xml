@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme for night mode. -->
+    <style name="Theme.DogScanAI" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+
+        <!-- Make the status bar transparent -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- For Dark Mode, the status bar icons should be LIGHT (false) -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

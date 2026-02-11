@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme for night mode. -->
+    <style name="Theme.DogScanAI" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+        <!-- For example, you can set your primary and secondary colors -->
+        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+        <!-- Make the status bar transparent -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- For Dark Mode, the status bar icons should be LIGHT, so this is correct. -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- This style is for activities that should not have an action bar, like the Splash Screen. -->
+    <!-- It inherits the main dark theme attributes. -->
+    <style name="Theme.DogScanAI.NoActionBar" parent="Theme.DogScanAI">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+</resources>
