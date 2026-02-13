@@ -1,4 +1,4 @@
-package fragment_activity
+package fragment_activity // Siguraduhing tugma ito sa folder structure mo
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -18,10 +18,13 @@ import com.firstapp.dogscanai.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
+    private lateinit var cameraExecutor: ExecutorService
 
     companion object {
         private const val CAMERA_PERMISSION_CODE = 100
@@ -31,11 +34,12 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
         findViewById<Button>(R.id.capture_button).setOnClickListener {
             takePhoto()
         }
 
-        // Check for camera permission before starting the camera
         if (allPermissionsGranted()) {
             startCamera()
         } else {
@@ -45,67 +49,66 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CAMERA_PERMISSION_CODE) {
-            if (allPermissionsGranted()) {
-                startCamera()
-            } else {
-                Toast.makeText(this, "Camera permission is required.", Toast.LENGTH_LONG).show()
-                finish() // Close activity if permission is denied
-            }
-        }
-    }
-
     private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(
         this, Manifest.permission.CAMERA
     ) == PackageManager.PERMISSION_GRANTED
 
-    // ... (rest of your takePhoto() and startCamera() methods remain the same)
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Preview setup
+            val preview = Preview.Builder().build().also {
+                val previewView: PreviewView = findViewById(R.id.previewView)
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
+
+            imageCapture = ImageCapture.Builder().build()
+
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture
+                )
+            } catch (exc: Exception) {
+                Toast.makeText(this, "Use case binding failed", Toast.LENGTH_SHORT).show()
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
+
+        // Mas safe na storage path
         val photoFile = File(
-            externalMediaDirs.firstOrNull(),
-            SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US)
-                .format(System.currentTimeMillis()) + ".jpg"
+            externalCacheDir,
+            SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg"
         )
+
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    Toast.makeText(baseContext, "Photo capture failed: ${exc.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(baseContext, "Error: ${exc.message}", Toast.LENGTH_SHORT).show()
                 }
+
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    StartActivity.navigateToScanResult = true
+                    Toast.makeText(baseContext, "Photo saved!", Toast.LENGTH_SHORT).show()
+                    // Dito ka mag-navigate sa Result Screen
                     finish()
                 }
             }
         )
     }
 
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-            val previewView: PreviewView = findViewById(R.id.previewView)
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-            imageCapture = ImageCapture.Builder().build()
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
-            } catch (exc: Exception) {
-                Toast.makeText(this, "Failed to start camera.", Toast.LENGTH_SHORT).show()
-            }
-        }, ContextCompat.getMainExecutor(this))
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
     }
 }

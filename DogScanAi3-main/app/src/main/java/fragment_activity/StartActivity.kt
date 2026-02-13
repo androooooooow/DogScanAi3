@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import fragment_activity.CameraActivity
 import fragment_activity.DogScanResultFragment
 import com.firstapp.dogscanai.R
+import com.firstapp.dogscanai.fragment_activity.HomeFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import inbox.InboxFragment

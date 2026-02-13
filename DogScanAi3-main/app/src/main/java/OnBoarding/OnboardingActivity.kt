@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -12,35 +11,44 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.dogscanai.utils.SessionManager // Import your SessionManager
 import com.firstapp.dogscanai.R
+import com.firstapp.dogscanai.accounts.LoginActivity
 import com.firstapp.dogscanai.accounts.SignupActivity
+import com.firstapp.dogscanai.accounts.DashboardActivity
 
 class OnboardingActivity : AppCompatActivity() {
 
     private lateinit var viewPager: ViewPager2
     private lateinit var indicatorContainer: LinearLayout
     private lateinit var onboardingAdapter: OnboardingAdapter
-
-    private var permissionJustGranted = false
-    private var isLastPageSelected = false
+    private lateinit var sessionManager: SessionManager // Declare SessionManager
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            permissionJustGranted = isGranted
             val msg = if (isGranted) "Camera permission granted!" else "Camera permission denied"
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-            // proceed anyway
             navigateToSignup()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 1. Initialize SessionManager
+        sessionManager = SessionManager(this)
+
+        // 2. CHECK ROUTING: Is it really the first time?
+        if (!sessionManager.isFirstTimeLaunch()) {
+            redirectUser()
+            return
+        }
+
         setContentView(R.layout.activity_onboarding)
 
         val layouts = listOf(
             R.layout.onboarding_slide_1,
             R.layout.onboarding_slide_2,
-            R.layout.onboarding_slide_3 // Camera slide
+            R.layout.onboarding_slide_3
         )
 
         onboardingAdapter = OnboardingAdapter(layouts)
@@ -55,43 +63,52 @@ class OnboardingActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 setCurrentIndicator(position)
-                isLastPageSelected = position == onboardingAdapter.itemCount - 1
-                handleCameraSlide(position)
+
+                // Only trigger camera/navigation logic if it's the absolute last page
+                if (position == onboardingAdapter.itemCount - 1) {
+                    handleCameraSlide(position)
+                }
             }
         })
     }
 
-    private fun handleCameraSlide(position: Int) {
-        val isCameraSlide = onboardingAdapter.isCameraSlide(position)
-        if (isCameraSlide) {
-            val hasPermission = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
+    private fun redirectUser() {
+        val destination = if (sessionManager.isLoggedIn()) {
+            DashboardActivity::class.java
+        } else {
+            LoginActivity::class.java
+        }
+        startActivity(Intent(this, destination))
+        finish()
+    }
 
-            if (!hasPermission) {
-                // Ask for permission
-                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-            } else {
-                navigateToSignup()
-            }
-        } else if (isLastPageSelected) {
-            // If it's just the last slide (not camera), proceed
+    private fun handleCameraSlide(position: Int) {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        } else {
             navigateToSignup()
         }
     }
 
     private fun navigateToSignup() {
+        // 3. Mark onboarding as SEEN
+        sessionManager.setFirstTimeLaunch(false)
+
         startActivity(Intent(this, SignupActivity::class.java))
         finish()
     }
 
+    // setupIndicators and setCurrentIndicator remain the same...
     private fun setupIndicators() {
+        indicatorContainer.removeAllViews() // Clear existing to prevent duplicates
         val indicators = arrayOfNulls<ImageView>(onboardingAdapter.itemCount)
-        val layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.setMargins(8, 0, 8, 0)
+        val layoutParams = LinearLayout.LayoutParams(12, 12).apply {
+            setMargins(8, 0, 8, 0)
+        }
         for (i in indicators.indices) {
             indicators[i] = ImageView(this).apply {
                 setImageResource(R.drawable.indicator_inactive)
@@ -102,8 +119,7 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun setCurrentIndicator(index: Int) {
-        val count = indicatorContainer.childCount
-        for (i in 0 until count) {
+        for (i in 0 until indicatorContainer.childCount) {
             val img = indicatorContainer.getChildAt(i) as ImageView
             img.setImageResource(
                 if (i == index) R.drawable.indicator_active else R.drawable.indicator_inactive

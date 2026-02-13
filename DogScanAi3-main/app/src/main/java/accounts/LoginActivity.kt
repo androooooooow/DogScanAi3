@@ -2,6 +2,7 @@ package com.firstapp.dogscanai.accounts
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -11,7 +12,7 @@ import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.ActivityLoginBinding
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
-import network.model.AuthManager  // ADD THIS IMPORT
+import network.model.AuthManager
 import network.model.LoginRequest
 import network.model.RetrofitClient
 
@@ -23,7 +24,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ ADD THIS LINE - INITIALIZE AUTH MANAGER
+        // Initialize AuthManager para sa API connection
         AuthManager.initialize(this)
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -31,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Check if already logged in
+        // Auto-login kung may existing session na
         if (sessionManager.isLoggedIn()) {
             goToDashboard()
             return
@@ -41,6 +42,22 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+        // --- BUTTON PARA BUMALIK SA ONBOARDING ---
+        binding.btnBackToOnboarding.setOnClickListener {
+            // I-reset ang flag para lumabas ang tutorial/onboarding views
+            sessionManager.setFirstTimeLaunch(true)
+
+            // Hanapin ang "Launcher" Activity (ang screen na unang bumubukas sa app mo)
+            val intent = packageManager.getLaunchIntentForPackage(packageName)
+            if (intent != null) {
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            } else {
+                Toast.makeText(this, "Onboarding screen not found.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         binding.loginButton.setOnClickListener {
             attemptLogin()
         }
@@ -54,14 +71,8 @@ class LoginActivity : AppCompatActivity() {
         val email = binding.email.text.toString().trim()
         val password = binding.password.text.toString().trim()
 
-        // Validate input
-        if (email.isEmpty()) {
-            Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (password.isEmpty()) {
-            Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -75,46 +86,27 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
 
-                    // ✅ ALSO SAVE TO AuthManager (for RetrofitClient token)
+                    // I-save ang user at token
                     authResponse.token?.let { token ->
                         authResponse.user?.let { user ->
                             AuthManager.saveUser(token, user)
+                            sessionManager.saveSession(token, user)
                         }
                     }
 
-                    // Save session to SessionManager
-                    sessionManager.saveSession(authResponse.token, authResponse.user)
-
-                    // Show welcome message
-                    Toast.makeText(
-                        this@LoginActivity,
-                        "Welcome, ${authResponse.user?.name}!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    // Navigate to Dashboard
+                    Toast.makeText(this@LoginActivity, "Welcome back!", Toast.LENGTH_SHORT).show()
                     goToDashboard()
                 } else {
-                    // Parse error response
                     val errorBody = response.errorBody()?.string()
-                    val errorMessage = if (errorBody != null) {
-                        try {
-                            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-                            errorResponse.error
-                        } catch (e: Exception) {
-                            "Login failed. Please try again."
-                        }
-                    } else {
-                        "Login failed. Please try again."
+                    val errorMessage = try {
+                        Gson().fromJson(errorBody, ErrorResponse::class.java).error
+                    } catch (e: Exception) {
+                        "Invalid email or password"
                     }
                     Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    this@LoginActivity,
-                    "Network error: Could not reach server. Please check your connection.",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this@LoginActivity, "Network Error", Toast.LENGTH_LONG).show()
             } finally {
                 showLoading(false)
             }
@@ -122,11 +114,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.loginButton.isEnabled = !show
     }
 
     private fun goToDashboard() {
+        // Palitan ang 'DashboardActivity' sa totoong dashboard filename mo
         val intent = Intent(this, DashboardActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)

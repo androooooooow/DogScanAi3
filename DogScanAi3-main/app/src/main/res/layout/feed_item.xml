@@ -1,134 +1,164 @@
-<?xml version="1.0" encoding="utf-8"?><LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@android:color/white"
+    android:layout_margin="4dp"
+    android:padding="8dp"
+    android:elevation="2dp">
 
-    <!-- User Info and Follow Button -->
+    <!-- User Info Section - COMPACT -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp">
 
+        <!-- User Profile Image -->
         <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/user_profile_image"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:id="@+id/iv_user_image"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/andrewg" />
+            android:src="@drawable/andrew" />
 
+        <!-- User Name and Date - STACKED -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/iv_user_image"
             android:layout_centerVertical="true"
-            android:layout_toEndOf="@id/user_profile_image"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/user_name"
+                android:id="@+id/tv_user_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Andrew Dila Utong"
+                android:text="Andrew Johnson"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="@android:color/black" />
 
             <TextView
-                android:id="@+id/post_info"
+                android:id="@+id/tv_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pakistan | 10/15/2024"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:text="11/02/2026"
+                android:textSize="10sp"
+                android:textColor="#757575" />
+
         </LinearLayout>
 
-        <Button
-            android:id="@+id/follow_button"
+        <!-- Like Count - RIGHT SIDE -->
+        <TextView
+            android:id="@+id/tv_likes"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:backgroundTint="@color/blue"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:text="Follow" />
+            android:text="13 Likes"
+            android:textSize="12sp"
+            android:textColor="#E53935"
+            android:drawableStart="@android:drawable/btn_star_big_on"
+            android:drawablePadding="2dp" />
+
     </RelativeLayout>
 
-    <!-- Post Caption -->
-    <TextView
-        android:id="@+id/post_caption"
+    <!-- Post Image - FILL WIDTH, FIXED HEIGHT -->
+    <ImageView
+        android:id="@+id/iv_post_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Meet my BullShit, the sweetest and most loyal companion! Whether we're out for a walk or just chilling at home, he brings so much joy and love into my life."
-        android:textColor="?android:attr/textColorPrimary" />
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:background="#F5F5F5"
+        android:src="@drawable/andrew"
+        />
 
-    <!-- Post Image -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="12dp"
-        app:cardCornerRadius="16dp">
-
-        <ImageView
-            android:id="@+id/post_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/andrew" />
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Likes, Comments, Share -->
+    <!-- Action Buttons - COMPACT -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:paddingVertical="2dp">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_home"
-            app:tint="?android:attr/textColorSecondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="10 Likes"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="16dp"
-            android:src="@drawable/ic_search"
-            app:tint="?android:attr/textColorSecondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="9 Comments"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <View
+        <!-- Like Button -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_settings"
-            app:tint="?android:attr/textColorSecondary" />
-
-        <TextView
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="Share"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="4dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:tint="#E53935" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Like"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Comment Button -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="4dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:tint="#2196F3" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Comment"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Share Button -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="4dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_share"
+                android:tint="#4CAF50" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Share"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

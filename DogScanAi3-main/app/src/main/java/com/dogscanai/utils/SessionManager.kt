@@ -1,4 +1,3 @@
-// SessionManager.kt
 package com.dogscanai.utils
 
 import android.content.Context
@@ -7,26 +6,18 @@ import network.model.User
 import com.google.gson.Gson
 
 class SessionManager(context: Context) {
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
     private val gson = Gson()
-
-    init {
-        sharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
-    }
 
     companion object {
         private const val KEY_TOKEN = "token"
         private const val KEY_USER = "user"
+        private const val KEY_FIRST_TIME = "is_first_time"
     }
 
-    // Add this method
-    fun isLoggedIn(): Boolean {
-        return getToken() != null
-    }
+    fun isLoggedIn(): Boolean = getToken() != null
 
-    fun getToken(): String? {
-        return sharedPreferences.getString(KEY_TOKEN, null)
-    }
+    fun getToken(): String? = sharedPreferences.getString(KEY_TOKEN, null)
 
     fun saveSession(token: String, user: User) {
         val editor = sharedPreferences.edit()
@@ -37,20 +28,15 @@ class SessionManager(context: Context) {
 
     fun getUser(): User? {
         val userJson = sharedPreferences.getString(KEY_USER, null)
-        return if (userJson != null) {
-            gson.fromJson(userJson, User::class.java)
-        } else {
-            null
-        }
+        return if (userJson != null) gson.fromJson(userJson, User::class.java) else null
     }
 
-    fun getAuthHeader(): String? {
-        val token = getToken()
-        return if (token != null) {
-            "Bearer $token"
-        } else {
-            null
-        }
+    fun setFirstTimeLaunch(isFirstTime: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_FIRST_TIME, isFirstTime).apply()
+    }
+
+    fun isFirstTimeLaunch(): Boolean {
+        return sharedPreferences.getBoolean(KEY_FIRST_TIME, true)
     }
 
     fun clearSession() {

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.firstapp.dogscanai" >
-    <!-- Permissions -->
+
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" /> <!-- Camera is optional; app can run without it -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
@@ -16,34 +16,45 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DogScanAI"
         android:usesCleartextTraffic="true" >
+
         <activity
-            android:name="fragment_activity.MainActivity"
-            android:exported="false" />
-        <!-- 1. LoginActivity as the entry point -->
-        <activity
-            android:name=".accounts.LoginActivity"
+            android:name=".OnBoarding.OnboardingActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- 2. SplashActivity -->
+        </activity>
+
+        <activity
+            android:name=".accounts.LoginActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="fragment_activity.MainActivity"
+            android:exported="false" />
+
         <activity
             android:name=".SplashActivity"
-            android:exported="false" /> <!-- 3. Onboarding Activity -->
-        <activity
-            android:name=".OnBoarding.OnboardingActivity"
-            android:exported="false" /> <!-- 4. Signup Activity -->
+            android:exported="false" />
+
         <activity
             android:name=".accounts.SignupActivity"
-            android:exported="false" /> <!-- 5. Dashboard Activity -->
+            android:exported="false" />
+
         <activity
             android:name=".accounts.DashboardActivity"
-            android:exported="false" /> <!-- 5. Start Activity (if used) -->
+            android:exported="false" />
+
+        <activity
+            android:name="fragment_activity.CameraActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".StartActivity"
-            android:exported="false" /> <!-- 6. Camera Activity (optional, if you have a separate activity for camera) -->
+            android:exported="false" />
+
         <activity
             android:name=".CameraActivity"
             android:exported="false" />

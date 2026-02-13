@@ -1,27 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
-    tools:context="fragment_activity.HomeFragment">
+    android:background="#F8F9FA"
+    android:orientation="vertical"
+    tools:context=".fragment_activity.HomeFragment">
 
-    <!-- The Toolbar you requested, added to the top of the screen -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_home"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/blue"
-        app:title="Home"
-        app:titleTextColor="@color/white" />
+        android:layout_height="80dp"
+        android:background="@android:color/white"
+        android:elevation="2dp"
+        android:paddingHorizontal="20dp">
 
-    <!-- The RecyclerView is now positioned below the toolbar -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/feeds_recycler_view"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome back,"
+                android:textColor="#757575"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Abalos, Domengkite"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btn_notifications"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_popup_reminder"
+            app:tint="@android:color/black" />
+
+    </RelativeLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar_home"
-        tools:listitem="@layout/feed_item" />
+        android:layout_height="match_parent">
 
-</RelativeLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/feed_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="12dp"
+            android:scrollbars="none"
+            tools:listitem="@layout/feed_item" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="#6200EE"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</LinearLayout>

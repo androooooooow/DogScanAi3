@@ -1,169 +1,162 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="#F8F9FA"
+    android:orientation="vertical"
     tools:context="fragment_activity.ProfileFragment">
 
-    <!-- Back Button -->
-    <ImageView
-        android:id="@+id/back_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:contentDescription="Back"
-        android:padding="12dp"
-        android:src="@drawable/ic_arrow_back"
-        app:tint="?android:attr/textColorPrimary" />
-
-    <!-- Profile Picture and Edit Button -->
-    <FrameLayout
-        android:id="@+id/profile_pic_layout"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp">
-
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/profile_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/andrewg"
-            app:civ_border_color="#FFD700"
-            app:civ_border_width="2dp" />
-
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="bottom|end"
-            android:background="@drawable/circle_background"
-            android:backgroundTint="@color/blue"
-            android:contentDescription="Edit Profile"
-            android:padding="6dp"
-            android:src="@drawable/ic_edit" />
-    </FrameLayout>
-
-    <!-- User Name -->
-    <TextView
-        android:id="@+id/user_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/profile_pic_layout"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
-        android:text="Andrew Dila Utong"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-
-    <!-- Stats Layout -->
-    <LinearLayout
-        android:id="@+id/stats_layout"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/user_name"
-        android:layout_marginTop="24dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:background="@android:color/white"
+        android:paddingBottom="24dp">
 
-        <!-- Posts -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
+        <FrameLayout
+            android:id="@+id/profile_pic_layout"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="5"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profile_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/andrewg"
+                app:civ_border_color="#EEEEEE"
+                app:civ_border_width="1dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Posts"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <!-- Likes, Followers, Following sections similarly updated -->
-        <!-- Likes -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="245"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Likes"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <!-- Followers -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="78"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Followers"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <!-- Following -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="7567"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Following"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/btn_edit_image"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/circle_background"
+                android:backgroundTint="#2196F3"
+                android:padding="6dp"
+                android:src="@drawable/ic_edit"
+                app:tint="@android:color/white" />
+        </FrameLayout>
 
-    <!-- Placeholder for the Grid of photos -->
-    <TextView
-        android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/profile_pic_layout"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="12dp"
+            android:text="Loading..."
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/user_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/user_name"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="4dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:text="loading@email.com"
+            android:textColor="#757575"
+            android:textSize="12sp" />
+    </RelativeLayout>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/stats_layout"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp"
-        android:text="[Photo Grid (RecyclerView) would go here]"
-        android:textColor="?android:attr/textColorSecondary"
-        android:textSize="16sp" />
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="20dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp">
 
-</RelativeLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/btn_edit_profile"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingHorizontal="16dp">
+                <ImageView
+                    android:id="@+id/icon1"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_edit"
+                    app:tint="#2196F3" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="16dp"
+                    android:layout_toEndOf="@id/icon1"
+                    android:text="Edit Profile"
+                    android:textColor="#333333"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F1F1" />
+
+            <RelativeLayout
+                android:id="@+id/btn_settings"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingHorizontal="16dp">
+                <ImageView
+                    android:id="@+id/icon2"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_settings"
+                    app:tint="#2196F3" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="16dp"
+                    android:layout_toEndOf="@id/icon2"
+                    android:text="Settings"
+                    android:textColor="#333333"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F1F1" />
+
+            <RelativeLayout
+                android:id="@+id/btn_logout"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingHorizontal="16dp">
+                <ImageView
+                    android:id="@+id/icon_logout"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/baseline_logout_24"
+                    app:tint="#F44336" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="16dp"
+                    android:layout_toEndOf="@id/icon_logout"
+                    android:text="Logout"
+                    android:textColor="#F44336"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>
