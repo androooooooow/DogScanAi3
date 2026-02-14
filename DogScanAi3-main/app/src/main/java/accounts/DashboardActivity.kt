@@ -10,6 +10,7 @@ import com.firstapp.dogscanai.databinding.ActivityDashboardBinding
 import com.firstapp.dogscanai.fragment_activity.HomeFragment
 // Siguraduhin na tama ang package path ng CameraActivity mo
 import fragment_activity.CameraActivity
+import fragment_activity.DogScanResultFragment
 import fragment_activity.ProfileFragment
 import fragment_activity.SearchFragment
 import inbox.InboxFragment
@@ -38,7 +39,7 @@ class DashboardActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.navigation_home -> { loadFragment(HomeFragment()); true }
                 R.id.navigation_search -> { loadFragment(SearchFragment()); true }
-                R.id.navigation_inbox -> { loadFragment(InboxFragment()); true }
+                R.id.navigation_result -> { loadFragment(DogScanResultFragment()); true }
                 R.id.navigation_profile -> { loadFragment(ProfileFragment()); true }
                 else -> false
             }

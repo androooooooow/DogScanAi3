@@ -44,7 +44,7 @@ class StartActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             val selectedFragment: Fragment? = when (item.itemId) {
                 R.id.navigation_home -> HomeFragment()
-                R.id.navigation_inbox -> InboxFragment()
+                R.id.navigation_result -> DogScanResultFragment()
                 R.id.navigation_profile -> ProfileFragment()
                 else -> null
             }

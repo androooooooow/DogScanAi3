@@ -45,6 +45,8 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:padding="8dp"
             android:src="@android:drawable/ic_popup_reminder"
             app:tint="@android:color/black" />
