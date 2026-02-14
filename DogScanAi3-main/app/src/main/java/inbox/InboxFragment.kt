@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,15 +15,26 @@ class InboxFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the CORRECT layout for the whole screen
+        // I-inflate ang layout para sa fragment na ito
         val view = inflater.inflate(R.layout.fragment_inbox, container, false)
 
-        // Find the RecyclerView within this fragment's view
-        val inboxRecyclerView: RecyclerView = view.findViewById(R.id.inbox_recycler_view)
+        // 1. Setup Back Button
+        val btnBack: ImageView = view.findViewById(R.id.btn_back_inbox)
+        btnBack.setOnClickListener {
+            // Babalik sa nakaraang fragment (HomeFragment) na nása back stack
+            parentFragmentManager.popBackStack()
+        }
 
-        // Set up the RecyclerView - VARIABLE NAMES ARE NOW CORRECT
+        // 2. Find and setup the RecyclerView
+        val inboxRecyclerView: RecyclerView = view.findViewById(R.id.inbox_recycler_view)
         inboxRecyclerView.layoutManager = LinearLayoutManager(context)
-        inboxRecyclerView.adapter = InboxAdapter() // Use the adapter you created
+
+        try {
+            // Siguraduhing mayroon kang InboxAdapter class sa iyong 'inbox' package
+            inboxRecyclerView.adapter = InboxAdapter()
+        } catch (e: Exception) {
+            // Fallback kung hindi pa nása-setup ang adapter
+        }
 
         return view
     }

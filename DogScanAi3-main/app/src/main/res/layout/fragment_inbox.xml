@@ -8,38 +8,40 @@
     android:orientation="vertical"
     tools:context="inbox.InboxFragment">
 
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="20dp"
-        android:paddingBottom="10dp"
-        android:text="Messages"
-        android:textAlignment="center"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:layout_height="60dp"
+        android:paddingHorizontal="16dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
+        <ImageView
+            android:id="@+id/btn_back_inbox"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="@android:color/black" />
 
-        android:orientation="horizontal"
-        android:padding="4dp">
-
-
-
-
-    </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Messages"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="45dp"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-
+        android:background="#F5F5F5"
         android:gravity="center_vertical"
         android:paddingHorizontal="12dp">
 
@@ -55,6 +57,7 @@
             android:layout_marginStart="8dp"
             android:background="@android:color/transparent"
             android:hint="Search Message"
+            android:inputType="text"
             android:textSize="14sp" />
     </LinearLayout>
 

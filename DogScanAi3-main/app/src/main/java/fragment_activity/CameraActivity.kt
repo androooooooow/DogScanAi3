@@ -1,114 +1,136 @@
-package fragment_activity // Siguraduhing tugma ito sa folder structure mo
+package fragment_activity
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.firstapp.dogscanai.R
+import kotlinx.coroutines.launch
+import network.api.RetrofitClient
+import network.model.SaveBreedRequest
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
-
-    companion object {
-        private const val CAMERA_PERMISSION_CODE = 100
-    }
+    private val TAG = "CameraActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        // Check Permissions
+        if (allPermissionsGranted()) {
+            startCamera()
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 101)
+        }
 
         findViewById<Button>(R.id.capture_button).setOnClickListener {
             takePhoto()
         }
-
-        if (allPermissionsGranted()) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE
-            )
-        }
-    }
-
-    private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(
-        this, Manifest.permission.CAMERA
-    ) == PackageManager.PERMISSION_GRANTED
-
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Preview setup
-            val preview = Preview.Builder().build().also {
-                val previewView: PreviewView = findViewById(R.id.previewView)
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-
-            imageCapture = ImageCapture.Builder().build()
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture
-                )
-            } catch (exc: Exception) {
-                Toast.makeText(this, "Use case binding failed", Toast.LENGTH_SHORT).show()
-            }
-        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
-        // Mas safe na storage path
-        val photoFile = File(
-            externalCacheDir,
-            SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(System.currentTimeMillis()) + ".jpg"
-        )
-
+        // Gawa ng temporary file para sa picture
+        val photoFile = File(externalCacheDir, "scan_${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-        imageCapture.takePicture(
-            outputOptions,
-            ContextCompat.getMainExecutor(this),
+        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exc: ImageCaptureException) {
-                    Toast.makeText(baseContext, "Error: ${exc.message}", Toast.LENGTH_SHORT).show()
-                }
-
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Toast.makeText(baseContext, "Photo saved!", Toast.LENGTH_SHORT).show()
-                    // Dito ka mag-navigate sa Result Screen
-                    finish()
+                    // STEP 1: I-upload at i-process ang breed
+                    uploadAndProcess(photoFile)
                 }
-            }
-        )
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Capture failed: ${exc.message}")
+                }
+            })
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
+    private fun uploadAndProcess(file: File) {
+        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        val body = MultipartBody.Part.createFormData("image", file.name, requestFile)
+        val email = "user@example.com".toRequestBody("text/plain".toMediaTypeOrNull())
+
+        lifecycleScope.launch {
+            try {
+                Toast.makeText(this@CameraActivity, "Processing breed...", Toast.LENGTH_SHORT).show()
+
+                // Tawagin ang Flask API
+                val response = RetrofitClient.instance.predictBreed(body, email, null)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val result = response.body()!!
+
+                    // STEP 2: I-save sa Database (Background)
+                    val saveReq = SaveBreedRequest(
+                        user_email = "user@example.com",
+                        user_id = null,
+                        image_name = file.name,
+                        predictions = result.predictions ?: emptyList()
+                    )
+                    RetrofitClient.instance.saveBreedToDb(saveReq)
+
+                    // STEP 3: LILIPAT NA SA RESULT FRAGMENT
+                    navigateToResult(
+                        result.topBreed ?: "Unknown",
+                        result.topConfidence ?: 0.0,
+                        file.absolutePath,
+                        result.predictions?.drop(1)?.joinToString("\n") { "${it.breed} - ${it.confidence.toInt()}%" } ?: ""
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error: ${e.message}")
+                Toast.makeText(this@CameraActivity, "Server Error", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+    private fun navigateToResult(breed: String, conf: Double, path: String, others: String) {
+        // Itago ang Camera UI elements
+        findViewById<PreviewView>(R.id.previewView).visibility = View.GONE
+        findViewById<Button>(R.id.capture_button).visibility = View.GONE
+
+        // I-load ang Fragment sa container
+        val fragment = DogScanResultFragment.newInstance(breed, conf, path, others)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null) // Para pag nag-back, babalik sa camera
+            .commit()
+    }
+
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(findViewById<PreviewView>(R.id.previewView).surfaceProvider)
+            }
+            imageCapture = ImageCapture.Builder().build()
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture)
+            } catch (e: Exception) { Log.e(TAG, "Camera failed", e) }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun allPermissionsGranted() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 }

@@ -48,7 +48,7 @@
             android:clickable="true"
             android:focusable="true"
             android:padding="8dp"
-            android:src="@android:drawable/ic_popup_reminder"
+            android:src="@drawable/baseline_notifications_24"
             app:tint="@android:color/black" />
 
     </RelativeLayout>
