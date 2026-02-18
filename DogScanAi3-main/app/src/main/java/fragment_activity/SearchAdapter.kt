@@ -1,41 +1,38 @@
 package fragment_activity
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.firstapp.dogscanai.R // Siguraduhin na tama ang package name mo rito
+import com.firstapp.dogscanai.databinding.ItemSearchBinding
 
-data class SearchItem(val id: Int, val title: String, val description: String, val imageRes: Int)
+class SearchAdapter(
+    private var items: List<SearchItem>,
+    private val onItemClick: (SearchItem) -> Unit
+) : RecyclerView.Adapter<SearchAdapter.ViewHolder>() {
 
-class SearchAdapter(private var items: List<SearchItem>) : RecyclerView.Adapter<SearchAdapter.ViewHolder>() {
-
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val img: ImageView = view.findViewById(R.id.itemImage)
-        val txtTitle: TextView = view.findViewById(R.id.itemTitle)
-        val txtDesc: TextView = view.findViewById(R.id.itemDescription)
-    }
+    class ViewHolder(val binding: ItemSearchBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // Gagamitin natin yung card layout na ginawa natin kanina
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_search_card, parent, false)
-        return ViewHolder(view)
+        val binding = ItemSearchBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.txtTitle.text = item.title
-        holder.txtDesc.text = item.description
-        holder.img.setImageResource(item.imageRes)
+        holder.binding.apply {
+            itemTitle.text = item.title
+            itemDescription.text = item.description
+            itemImage.setImageResource(item.imageRes)
+
+            // Dito gumagana ang clickable item
+            root.setOnClickListener { onItemClick(item) }
+        }
     }
 
     override fun getItemCount() = items.size
 
-    // Function para sa real-time search filtering
-    fun filterList(filteredNames: List<SearchItem>) {
-        this.items = filteredNames
+    fun filterList(newList: List<SearchItem>) {
+        items = newList
         notifyDataSetChanged()
     }
 }

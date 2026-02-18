@@ -8,10 +8,22 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.FragmentSearchBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
+// 1. DATA CLASS
+data class SearchItem(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val imageRes: Int,
+    val treatment: String? = null
+)
 
 class SearchFragment : Fragment() {
 
@@ -20,6 +32,7 @@ class SearchFragment : Fragment() {
     private lateinit var adapter: SearchAdapter
     private var isViewingBreeds = true
 
+    // 2. FULL BREEDS LIST (121 Items)
     private val breedList = listOf(
         SearchItem(1, "Affenpinscher", "Monkey-faced toy terrier", R.drawable.aso_1),
         SearchItem(2, "Afghan Hound", "Aristocratic sighthound", R.drawable.aso2),
@@ -144,19 +157,29 @@ class SearchFragment : Fragment() {
         SearchItem(121, "Yorkshire Terrier", "Glamorous toy terrier", R.drawable.aso120)
     )
 
+    // 3. DISEASES LIST
     private val diseaseList = listOf(
-        SearchItem(201, "Demodicosis", "Skin disease caused by Demodex mites.", R.drawable.demodicosis),
-        SearchItem(202, "Dermatitis", "Inflammation of the skin.", R.drawable.dermatitis),
-        SearchItem(203, "Fungal Infections", "Issues caused by fungi.", R.drawable.fungal),
-        SearchItem(204, "Hypersensitivity", "Allergic reactions.", R.drawable.hypersensitivity),
-        SearchItem(205, "Ringworm", "Contagious fungal infection.", R.drawable.ringworm),
-        SearchItem(206, "Healthy Skin", "Normal healthy dog skin.", R.drawable.aspin)
+        SearchItem(201, "Demodicosis", "Skin disease caused by Demodex mites.", R.drawable.demodicosis,
+            "• Use medicated shampoos (Benzoyl Peroxide).\n• Topical or oral medications as prescribed by a vet.\n• Boost immune system with proper nutrition."),
+        SearchItem(202, "Dermatitis", "Inflammation of the skin due to allergies.", R.drawable.dermatitis,
+            "• Identify and avoid allergens.\n• Use hypoallergenic soaps.\n• Antihistamines or steroids may be required."),
+        SearchItem(203, "Fungal Infections", "Issues caused by fungi like Malassezia.", R.drawable.fungal,
+            "• Antifungal creams or shampoos.\n• Keep affected areas dry.\n• Oral antifungal drugs for severe cases."),
+        SearchItem(204, "Hypersensitivity", "Severe allergic reactions.", R.drawable.hypersensitivity,
+            "• Immediate vet consultation.\n• Elimination diet if food-related.\n• Anti-inflammatory medications."),
+        SearchItem(205, "Ringworm", "Contagious fungal infection forming circles.", R.drawable.ringworm,
+            "• Topical antifungal therapy.\n• Disinfect all bedding and brushes.\n• Quarantine the pet to prevent spreading."),
+        SearchItem(206, "Healthy Skin", "Normal healthy dog skin.", R.drawable.aspin,
+            "• Maintain regular grooming.\n• Balanced diet with Omega-3 fatty acids.\n• Monthly flea and tick prevention.")
     )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
 
-        adapter = SearchAdapter(breedList)
+        adapter = SearchAdapter(breedList) { selectedItem ->
+            showInfoPopup(selectedItem)
+        }
+
         binding.searchRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.searchRecyclerView.adapter = adapter
 
@@ -164,6 +187,31 @@ class SearchFragment : Fragment() {
         setupSearch()
 
         return binding.root
+    }
+
+    private fun showInfoPopup(item: SearchItem) {
+        val builder = MaterialAlertDialogBuilder(requireContext())
+        val dialogView = layoutInflater.inflate(R.layout.dialog_info_popup, null)
+
+        val img = dialogView.findViewById<ImageView>(R.id.popupImage)
+        val title = dialogView.findViewById<TextView>(R.id.popupTitle)
+        val desc = dialogView.findViewById<TextView>(R.id.popupDescription)
+        val treat = dialogView.findViewById<TextView>(R.id.popupTreatment)
+
+        img.setImageResource(item.imageRes)
+        title.text = item.title
+        desc.text = item.description
+
+        if (item.treatment != null) {
+            treat.visibility = View.VISIBLE
+            treat.text = "Recommended Treatment:\n${item.treatment}"
+        } else {
+            treat.visibility = View.GONE
+        }
+
+        builder.setView(dialogView)
+        builder.setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+        builder.create().show()
     }
 
     private fun setupCategoryButtons() {

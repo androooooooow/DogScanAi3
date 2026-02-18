@@ -17,7 +17,7 @@
         android:layout_margin="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:elevation="10dp"
-        android:src="@android:drawable/ic_menu_revert"
+        android:src="@drawable/ic_arrow"
         app:tint="@android:color/white"
         android:contentDescription="Back to Onboarding" />
 

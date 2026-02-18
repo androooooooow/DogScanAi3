@@ -31,6 +31,14 @@ class SessionManager(context: Context) {
         return if (userJson != null) gson.fromJson(userJson, User::class.java) else null
     }
 
+    // Ito ang inayos nating function para mawala ang 'Unresolved reference'
+    fun saveUser(user: User) {
+        val editor = sharedPreferences.edit()
+        val userJson = gson.toJson(user)
+        editor.putString(KEY_USER, userJson) // Tinitiyak na parehas ang KEY na ginamit
+        editor.apply()
+    }
+
     fun setFirstTimeLaunch(isFirstTime: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_FIRST_TIME, isFirstTime).apply()
     }

@@ -27,31 +27,39 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         sessionManager = SessionManager(requireContext())
 
-        // --- DYNAMIC DATA DISPLAY ---
+        // --- BUTTON LISTENERS ---
+
+        // Pag-click ng Edit Profile, lilipat sa EditProfileActivity
+        binding.btnEditProfile.setOnClickListener {
+            val intent = Intent(requireContext(), EditProfileActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnLogout.setOnClickListener {
+            performLogout()
+        }
+    }
+
+    // Gagamit tayo ng onResume para ma-refresh ang Name at Email
+    // pagbalik ng user galing sa EditProfileActivity
+    override fun onResume() {
+        super.onResume()
+        refreshUserData()
+    }
+
+    private fun refreshUserData() {
         val user = sessionManager.getUser()
         if (user != null) {
             binding.userName.text = user.name
             binding.userEmail.text = user.email
         }
-
-        // --- BUTTON LISTENERS ---
-        binding.btnLogout.setOnClickListener {
-            performLogout()
-        }
-
-        binding.btnEditProfile.setOnClickListener {
-            Toast.makeText(requireContext(), "Edit Profile clicked", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun performLogout() {
         sessionManager.clearSession()
-
         Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
-
         val intent = Intent(activity, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)

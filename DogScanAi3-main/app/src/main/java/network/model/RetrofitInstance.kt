@@ -12,7 +12,7 @@ object RetrofitInstance {
     // This is the ONLY part you need to worry about.
     // Use http://10.0.2.2:5000/ for the Android Emulator.
     // Use http://YOUR_COMPUTER_IP:5000/ for a physical phone on the same Wi-Fi.
-    private const val BASE_URL = "http://10.40.20.15:5000/"
+    private const val BASE_URL = "http://192.168.137.1:5000/"
 
     // Create a logger to see API requests and responses in Logcat (for debugging)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
