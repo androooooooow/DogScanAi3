@@ -4,7 +4,7 @@ package network.model
 
 // Request models
 data class RegisterRequest(
-    val name: String,
+    val username: String,
     val email: String,
     val password: String
 )
@@ -19,7 +19,7 @@ data class AuthResponse(
 // Ito ang iyong sariling User model
 data class User(
     val id: String,
-    val name: String,
+    val username: String,
     val email: String
 )
 
@@ -30,7 +30,7 @@ data class ProfileResponse(
 )
 
 data class UpdateProfileRequest(
-    val name: String,
+    val username: String,
     val email: String,
     val password: String? = null
 )

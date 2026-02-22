@@ -27,7 +27,7 @@ class EditProfileActivity : AppCompatActivity() {
         val currentUser = sessionManager.getUser()
 
         // I-set ang current data sa fields
-        binding.etEditName.setText(currentUser?.name)
+        binding.etEditName.setText(currentUser?.username)
         binding.etEditEmail.setText(currentUser?.email)
 
         binding.btnBack.setOnClickListener { finish() }
@@ -47,7 +47,7 @@ class EditProfileActivity : AppCompatActivity() {
 
             // 2. I-PREPARE ANG REQUEST
             val request = UpdateProfileRequest(
-                name = name,
+                username = name,
                 email = email,
                 password = if (password.isEmpty()) null else password
             )

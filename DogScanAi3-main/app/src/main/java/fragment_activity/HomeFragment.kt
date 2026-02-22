@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
         val user = sessionManager.getUser() //
 
         // I-display ang pangalan mula sa database, fallback ang "User" kung wala
-        tvUsername.text = user?.name ?: "User"
+        tvUsername.text = user?.username ?: "User"
 
         // 3. Setup Notification Button Click
         val btnNotifications: ImageView = view.findViewById(R.id.btn_notifications)

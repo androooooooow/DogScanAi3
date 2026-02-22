@@ -98,7 +98,7 @@ class SignupActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val registerRequest = RegisterRequest(
-                    name = username,
+                    username = username,
                     email = email,
                     password = password
                 )
@@ -120,7 +120,7 @@ class SignupActivity : AppCompatActivity() {
                     // Show success message
                     Toast.makeText(
                         this@SignupActivity,
-                        "Account created successfully! Welcome, ${authResponse.user?.name}!",
+                        "Account created successfully! Welcome, ${authResponse.user?.username}!",
                         Toast.LENGTH_SHORT
                     ).show()
 

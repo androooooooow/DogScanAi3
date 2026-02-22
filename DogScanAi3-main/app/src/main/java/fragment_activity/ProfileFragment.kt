@@ -52,7 +52,7 @@ class ProfileFragment : Fragment() {
     private fun refreshUserData() {
         val user = sessionManager.getUser()
         if (user != null) {
-            binding.userName.text = user.name
+            binding.userName.text = user.username
             binding.userEmail.text = user.email
         }
     }

@@ -28,7 +28,7 @@ object AuthManager {
         with(sharedPreferences.edit()) {
             putString(KEY_TOKEN, token)
             putString(KEY_USER_ID, user.id)
-            putString(KEY_USER_NAME, user.name)
+            putString(KEY_USER_NAME, user.username)
             putString(KEY_USER_EMAIL, user.email)
             apply()
         }
@@ -51,11 +51,11 @@ object AuthManager {
         if (!::sharedPreferences.isInitialized) return null
 
         val id = sharedPreferences.getString(KEY_USER_ID, null)
-        val name = sharedPreferences.getString(KEY_USER_NAME, null)
+        val username = sharedPreferences.getString(KEY_USER_NAME, null)
         val email = sharedPreferences.getString(KEY_USER_EMAIL, null)
 
-        return if (id != null && name != null && email != null) {
-            User(id, name, email)
+        return if (id != null && username != null && email != null) {
+            User(id, username, email)
         } else {
             null
         }
