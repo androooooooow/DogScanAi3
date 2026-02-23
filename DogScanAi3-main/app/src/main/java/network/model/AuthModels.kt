@@ -13,8 +13,11 @@ data class RegisterRequest(
 data class AuthResponse(
     val success: Boolean,
     val message: String? = null,
-    val token: String? = null
+    val token: String? = null,
+    val user: User? = null
 )
+
+
 
 // Ito ang iyong sariling User model
 data class User(
@@ -41,3 +44,4 @@ data class UpdateProfileResponse(
     val message: String,
     val user: User? // <--- DAPAT 'User' ITO, HINDI 'UserData'
 )
+

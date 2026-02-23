@@ -26,16 +26,22 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
+    // ✅ ADD THIS FUNCTION - Para sa pag-save ng token lang
+    fun saveToken(token: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(KEY_TOKEN, token)
+        editor.apply()
+    }
+
     fun getUser(): User? {
         val userJson = sharedPreferences.getString(KEY_USER, null)
         return if (userJson != null) gson.fromJson(userJson, User::class.java) else null
     }
 
-    // Ito ang inayos nating function para mawala ang 'Unresolved reference'
     fun saveUser(user: User) {
         val editor = sharedPreferences.edit()
         val userJson = gson.toJson(user)
-        editor.putString(KEY_USER, userJson) // Tinitiyak na parehas ang KEY na ginamit
+        editor.putString(KEY_USER, userJson)
         editor.apply()
     }
 
@@ -52,5 +58,10 @@ class SessionManager(context: Context) {
         editor.remove(KEY_TOKEN)
         editor.remove(KEY_USER)
         editor.apply()
+    }
+
+    fun getBearerToken(): String? {
+        val token = getToken()
+        return if (token != null) "Bearer $token" else null
     }
 }

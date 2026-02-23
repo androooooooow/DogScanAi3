@@ -1,13 +1,7 @@
 package network.model
-// AuthRepository.kt
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.dogscanai.models.AuthResponse
-import com.dogscanai.models.ProfileResponse
-import com.dogscanai.models.RegisterRequest
-import network.model.AuthManager
-import network.model.RetrofitClient
 
 class AuthRepository {
 
@@ -48,8 +42,6 @@ class AuthRepository {
             }
         }
     }
-
-
 
     suspend fun logout(): Result<Unit> {
         return withContext(Dispatchers.IO) {

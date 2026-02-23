@@ -2,17 +2,17 @@ package com.firstapp.dogscanai.accounts
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dogscanai.models.ErrorResponse
-import com.dogscanai.models.RegisterRequest
 import com.dogscanai.utils.SessionManager
-import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.ActivitySignupBinding
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
-import network.model.AuthManager  // ADD THIS IMPORT
+import network.model.AuthManager
+import network.model.RegisterRequest
 import network.model.RetrofitClient
 import java.util.regex.Pattern
 
@@ -24,7 +24,6 @@ class SignupActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ ADD THIS LINE - INITIALIZE AUTH MANAGER
         AuthManager.initialize(this)
 
         binding = ActivitySignupBinding.inflate(layoutInflater)
@@ -52,7 +51,6 @@ class SignupActivity : AppCompatActivity() {
         val password = binding.password.text.toString().trim()
         val confirmPassword = binding.confirmPassword.text.toString().trim()
 
-        // Validate input
         if (username.isEmpty()) {
             Toast.makeText(this, "Please enter a username", Toast.LENGTH_SHORT).show()
             return
@@ -107,27 +105,21 @@ class SignupActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
 
-                    // ✅ ALSO SAVE TO AuthManager (for RetrofitClient token)
                     authResponse.token?.let { token ->
                         authResponse.user?.let { user ->
                             AuthManager.saveUser(token, user)
+                            sessionManager.saveSession(token, user)
                         }
                     }
 
-                    // Save session to SessionManager
-                    sessionManager.saveSession(authResponse.token, authResponse.user)
-
-                    // Show success message
                     Toast.makeText(
                         this@SignupActivity,
                         "Account created successfully! Welcome, ${authResponse.user?.username}!",
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // Navigate to Dashboard
                     goToDashboard()
                 } else {
-                    // Parse error response
                     val errorBody = response.errorBody()?.string()
                     val errorMessage = if (errorBody != null) {
                         try {
@@ -162,7 +154,7 @@ class SignupActivity : AppCompatActivity() {
     }
 
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.signupButton.isEnabled = !show
     }
 

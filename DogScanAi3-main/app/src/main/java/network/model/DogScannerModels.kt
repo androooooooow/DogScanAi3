@@ -3,13 +3,7 @@ package network.model
 import com.google.gson.annotations.SerializedName
 
 // --- PREDICTION MODELS (Galing sa AI) ---
-data class BreedResponse(
-    val success: Boolean,
-    val predictions: List<BreedResult>?,
-    @SerializedName("top_breed") val topBreed: String?,
-    @SerializedName("top_confidence") val topConfidence: Double?,
-    val error: String?
-)
+
 
 data class BreedResult(
     val breed: String,

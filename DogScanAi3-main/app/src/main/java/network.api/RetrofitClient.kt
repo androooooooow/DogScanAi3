@@ -4,8 +4,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // 192.168.137.1 ang default IP ng Windows Mobile Hotspot
-    private const val BASE_URL = "http://192.168.137.1:5000/"
+    // ✅ Port 5001 = Python Flask (AI model)
+    private const val BASE_URL = "http://192.168.137.1:5001/"
 
     val instance: DogScannerApi by lazy {
         Retrofit.Builder()

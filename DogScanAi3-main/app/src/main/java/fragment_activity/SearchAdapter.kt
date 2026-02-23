@@ -3,6 +3,8 @@ package fragment_activity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.ItemSearchBinding
 
 class SearchAdapter(
@@ -22,9 +24,20 @@ class SearchAdapter(
         holder.binding.apply {
             itemTitle.text = item.title
             itemDescription.text = item.description
-            itemImage.setImageResource(item.imageRes)
 
-            // Dito gumagana ang clickable item
+            // If imageUrl is available (from database), use Glide to load it
+            // Otherwise, fall back to the local drawable resource
+            if (!item.imageUrl.isNullOrEmpty()) {
+                Glide.with(holder.itemView.context)
+                    .load(item.imageUrl)
+                    .placeholder(R.drawable.aspin) // shown while loading
+                    .error(R.drawable.aspin)        // shown if load fails
+                    .centerCrop()
+                    .into(itemImage)
+            } else {
+                itemImage.setImageResource(item.imageRes)
+            }
+
             root.setOnClickListener { onItemClick(item) }
         }
     }

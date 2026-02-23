@@ -1,25 +1,22 @@
 package network.model
 
-// PALITAN ANG MGA IMPORT NA ITO:
-// import com.firstapp.dogscanai.ApiService  // REMOVE THIS
-// import okhttp3.Logging.HttpLoggingInterceptor  // REMOVE THIS
-
-// ITO ANG TAMANG IMPORTS:
-import network.model.ApiService  // ✅ TAMA NA ITO
+import network.model.ApiService
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor  // ✅ TAMA NA ITO
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ✅ PASTE ITO: Gamitin 'to kasi hotspot ang phone mo
     private const val BASE_URL = "http://192.168.137.1:5000/"
 
     private var retrofit: Retrofit? = null
+
+    // ✅ ADD THIS - so SearchFragment can use RetrofitClient.instance
+    val instance: ApiService by lazy { getClient() }
 
     private val requestInterceptor = Interceptor { chain ->
         val original = chain.request()
@@ -27,7 +24,6 @@ object RetrofitClient {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
 
-        // Add token if available
         val token = AuthManager.getToken()
         token?.let {
             requestBuilder.header("Authorization", "Bearer $it")
@@ -56,7 +52,7 @@ object RetrofitClient {
                 .create()
 
             retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)  // ✅ Dito gagamitin ang BASE_URL
+                .baseUrl(BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build()
