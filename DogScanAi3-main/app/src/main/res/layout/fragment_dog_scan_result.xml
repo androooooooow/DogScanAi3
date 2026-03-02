@@ -3,139 +3,159 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"> <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="20dp">
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="280dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
-        android:layout_marginBottom="24dp">
-
-        <ImageView
-            android:id="@+id/scanned_dog_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/aspin" />
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="#6750A4"
-        app:cardCornerRadius="16dp"
-        android:layout_marginBottom="20dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TOP BREED"
-                android:textColor="#EADDFF"
-                android:textSize="12sp"
-                android:letterSpacing="0.1"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/top_breed_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Aspin"
-                android:textColor="@android:color/white"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:id="@+id/top_breed_accuracy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="98% Match"
-                android:textColor="#D0BCFF"
-                android:textSize="16sp"
-                android:layout_marginTop="4dp" />
-
-            <ProgressBar
-                android:id="@+id/accuracy_progress_bar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="16dp"
-                android:max="100"
-                android:progress="98"
-                android:progressTint="@android:color/white" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        android:layout_marginBottom="24dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Analysis Details"
-                android:textColor="#1C1B1F"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:id="@+id/other_breeds_placeholder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="The AI has detected characteristics consistent with native mixed-breed dogs..."
-                android:textColor="#49454F"
-                android:textSize="14sp"
-                android:lineSpacingExtra="6dp" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    android:background="#F8F9FA">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="20dp">
 
+        <!-- Scanned Image -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="280dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/scanned_dog_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/placeholder" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Result Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/result_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#4A69FF"
+            app:cardCornerRadius="16dp"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tv_mode_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TOP BREED"
+                    android:textColor="#EADDFF"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.1"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/top_breed_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Aspin"
+                    android:textColor="@android:color/white"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/top_breed_accuracy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="98% Match"
+                    android:textColor="#D0BCFF"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp" />
+
+                <ProgressBar
+                    android:id="@+id/accuracy_progress_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="16dp"
+                    android:max="100"
+                    android:progress="98"
+                    android:progressTint="@android:color/white" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Details Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tv_details_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Analysis Details"
+                    android:textColor="#1C1B1F"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/other_breeds_placeholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Details will appear here..."
+                    android:textColor="#49454F"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="6dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <Button
+                android:id="@+id/retry_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Retry"
+                app:cornerRadius="12dp" />
+
+            <Button
+                android:id="@+id/save_button"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="#4A69FF"
+                android:text="Save Result"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
+
+        <!-- View History Button (hidden until saved) -->
         <Button
-            android:id="@+id/retry_button"
+            android:id="@+id/view_history_button"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="Retry"
+            android:text="View History"
+            android:visibility="gone"
             app:cornerRadius="12dp" />
 
-        <Button
-            android:id="@+id/save_button"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="#6750A4"
-            android:text="Save Result"
-            app:cornerRadius="12dp" />
     </LinearLayout>
-
-</LinearLayout>
 </ScrollView>

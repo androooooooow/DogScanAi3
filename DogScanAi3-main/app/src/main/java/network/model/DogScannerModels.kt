@@ -2,8 +2,7 @@ package network.model
 
 import com.google.gson.annotations.SerializedName
 
-// --- PREDICTION MODELS (Galing sa AI) ---
-
+// --- PREDICTION MODELS ---
 
 data class BreedResult(
     val breed: String,
@@ -11,11 +10,19 @@ data class BreedResult(
 )
 
 data class DiseaseResponse(
-    val success: Boolean,
-    @SerializedName("is_healthy") val isHealthy: Boolean?,
-    @SerializedName("top_prediction") val topPrediction: DiseaseDetail?,
-    val recommendation: String?,
-    val error: String?
+    val scan_type: String?,
+    val top_diseases: List<DiseaseEntry>
+)
+
+data class DiseaseEntry(
+    val rank: Int?,
+    val class_index: Int?,
+    val class_name: String?,
+    val display_name: String?,
+    val confidence: Double?,
+    val description: String?,
+    val treatment: String?,
+    val severity: String?
 )
 
 data class DiseaseDetail(
@@ -26,7 +33,8 @@ data class DiseaseDetail(
     val severity: String
 )
 
-// --- DATABASE SAVE MODELS (Para sa PostgreSQL endpoints mo) ---
+// --- DATABASE SAVE MODELS ---
+
 data class SaveBreedRequest(
     val user_email: String,
     val user_id: String?,
@@ -49,4 +57,54 @@ data class SaveResponse(
     val message: String,
     @SerializedName("scan_id") val scanId: Int?,
     @SerializedName("scan_date") val scanDate: String?
+)
+
+// ✅ FIXED - scan_type is REQUIRED by backend (validates "breed" or "disease")
+data class SaveScanRequest(
+    @SerializedName("image_url") val image_url: String,
+    @SerializedName("predictions") val predictions: List<ScanPrediction>,
+    @SerializedName("scan_type") val scan_type: String = "breed"  // ✅ backend requires this
+)
+
+// ✅ FIXED - added breed_id (backend stores it), made fields non-nullable with defaults
+data class ScanPrediction(
+    @SerializedName("rank") val rank: Int,
+    @SerializedName("breed_id") val breed_id: Int? = null,        // ✅ backend expects this
+    @SerializedName("class_name") val class_name: String = "",
+    @SerializedName("display_name") val display_name: String = "",
+    @SerializedName("confidence") val confidence: Double = 0.0
+)
+
+// ✅ FIXED - backend returns {scan_id, scanned_at} on 201 success
+data class SaveScanResponse(
+    @SerializedName("scan_id") val scan_id: Int?,
+    @SerializedName("scanned_at") val scanned_at: String?
+) {
+    val success: Boolean
+        get() = scan_id != null
+}
+
+// ✅ FIXED - matches GET /api/scans response, scan_type now from actual data
+data class ScanHistoryResponse(
+    @SerializedName("id") val id: Int?,
+    @SerializedName("image_url") val image_url: String?,
+    @SerializedName("scanned_at") val scanned_at: String?,
+    @SerializedName("scan_type") val scan_type: String?,           // ✅ backend returns this field
+    @SerializedName("predictions") val predictions: List<ScanPredictionItem>?
+) {
+    val top_prediction: String?
+        get() = predictions?.minByOrNull { it.rank ?: 99 }?.display_name
+
+    val confidence: Double?
+        get() = predictions?.minByOrNull { it.rank ?: 99 }?.confidence
+}
+
+// ✅ unchanged - already correct
+data class ScanPredictionItem(
+    @SerializedName("id") val id: Int?,
+    @SerializedName("rank") val rank: Int?,
+    @SerializedName("breed_id") val breed_id: Int?,
+    @SerializedName("class_name") val class_name: String?,
+    @SerializedName("display_name") val display_name: String?,
+    @SerializedName("confidence") val confidence: Double?
 )

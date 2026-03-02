@@ -1,5 +1,8 @@
 package network.model
 
+import com.dogscanai.models.AuthResponse      // ✅ use this one
+import com.dogscanai.models.RegisterRequest   // ✅ use this one
+import network.api.RetrofitClient             // ✅ use network.api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

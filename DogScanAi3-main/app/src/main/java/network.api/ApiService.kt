@@ -3,9 +3,13 @@ package network.api
 import com.dogscanai.models.AuthResponse
 import com.dogscanai.models.RegisterRequest
 import network.model.ApiResponse
+import network.model.BreedResponse
 import network.model.LoginRequest
 import network.model.ProfileResponse
+import network.model.SaveScanRequest
+import network.model.SaveScanResponse
 import network.model.ScanCountResponse
+import network.model.ScanHistoryResponse
 import network.model.UpdateProfileRequest
 import network.model.UpdateProfileResponse
 import retrofit2.Call
@@ -36,11 +40,25 @@ interface ApiService {
         @Body request: UpdateProfileRequest
     ): Call<UpdateProfileResponse>
 
-
-
     @GET("api/scan-count/{email}")
     suspend fun getScanCount(
         @Path("email") email: String,
         @Header("Authorization") token: String
     ): Response<ScanCountResponse>
+
+    @GET("api/breeds")
+    suspend fun getBreeds(
+        @Header("Authorization") token: String
+    ): Response<List<BreedResponse>>
+
+    @POST("api/scans")
+    fun saveScan(
+        @Header("Authorization") token: String,
+        @Body request: SaveScanRequest
+    ): Call<SaveScanResponse>
+
+    @GET("api/scans")
+    fun getScanHistory(
+        @Header("Authorization") token: String
+    ): Call<List<ScanHistoryResponse>>
 }

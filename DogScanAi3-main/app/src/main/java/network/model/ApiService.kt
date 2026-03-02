@@ -1,42 +1,41 @@
 package network.model
 
-import retrofit2.Response
-import retrofit2.Call
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
-import retrofit2.http.Path
+import network.api.ApiService  // ✅ must be THIS package, not network.model
+import com.google.gson.GsonBuilder
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
-interface ApiService {
+object RetrofitClient {
 
-    @POST("api/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+    private const val BASE_URL = "http://192.168.137.1:5000/"  // ✅ Node.js port
 
-    @POST("api/auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+    private var retrofit: Retrofit? = null
 
-    @GET("api/auth/me")
-    suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
+    val instance: ApiService by lazy { getClient() }  // ✅ ApiService from network.api
 
-    @POST("api/auth/logout")
-    suspend fun logout(@Header("Authorization") token: String): Response<ApiResponse<Unit>>
+    fun getClient(): ApiService {
+        if (retrofit == null) {
+            val logging = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+            val client = OkHttpClient.Builder()
+                .addInterceptor(logging)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
 
-    // ✅ FIXED: Added @Header back since your other endpoints use manual token
-    @POST("api/auth/update-profile")
-    fun updateProfile(
-        @Header("Authorization") token: String,
-        @Body request: UpdateProfileRequest
-    ): Call<UpdateProfileResponse>
+            val gson = GsonBuilder().setLenient().create()
 
-    @GET("api/breeds")
-    suspend fun getBreeds(
-        @Header("Authorization") token: String
-    ): Response<List<BreedResponse>>
-
-    @GET("api/scan-count/{email}")
-    suspend fun getScanCount(
-        @Path("email") email: String,
-        @Header("Authorization") token: String
-    ): Response<ScanCountResponse>
+            retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+        }
+        return retrofit!!.create(ApiService::class.java)
+    }
 }

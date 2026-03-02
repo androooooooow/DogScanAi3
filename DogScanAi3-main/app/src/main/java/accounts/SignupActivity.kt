@@ -12,7 +12,7 @@ import com.firstapp.dogscanai.databinding.ActivitySignupBinding
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import network.model.AuthManager
-import network.model.RegisterRequest
+import com.dogscanai.models.RegisterRequest
 import network.model.RetrofitClient
 import java.util.regex.Pattern
 
