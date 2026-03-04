@@ -54,6 +54,23 @@
         android:background="@android:drawable/edit_text"
         android:paddingHorizontal="10dp" />
 
+    <!-- ✅ NEW: Current Password (required by backend to verify identity) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current Password"
+        android:layout_marginTop="20dp"
+        android:textColor="#757575" />
+
+    <EditText
+        android:id="@+id/et_current_password"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Required to save changes"
+        android:inputType="textPassword"
+        android:background="@android:drawable/edit_text"
+        android:paddingHorizontal="10dp" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

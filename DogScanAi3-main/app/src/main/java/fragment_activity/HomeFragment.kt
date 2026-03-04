@@ -1,5 +1,6 @@
 package com.firstapp.dogscanai.fragment_activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,81 +9,100 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.dogscanai.utils.SessionManager //
-import com.firstapp.dogscanai.R //
-import inbox.InboxFragment // Siguraduhing tama ang package path nito
+import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.R
+import fragment_activity.ScanHistoryActivity
+import network.api.RetrofitClient
+import network.model.ScanHistoryResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeFragment : Fragment() {
 
-    private lateinit var sessionManager: SessionManager //
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // I-inflate ang layout para sa fragment na ito
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("HomeFragment", "=== HOME FRAGMENT STARTED ===") //
+        Log.d("HomeFragment", "=== HOME FRAGMENT STARTED ===")
 
-        // 1. Initialize SessionManager
         sessionManager = SessionManager(requireContext())
 
-        // 2. I-setup ang Username Display
-        val tvUsername: TextView = view.findViewById(R.id.tv_username)
-        val user = sessionManager.getUser() //
+        // Show username
+        val user = sessionManager.getUser()
+        view.findViewById<TextView>(R.id.tv_username)?.text = user?.username ?: "User"
 
-        // I-display ang pangalan mula sa database, fallback ang "User" kung wala
-        tvUsername.text = user?.username ?: "User"
-
-        // 3. Setup Notification Button Click
-        val btnNotifications: ImageView = view.findViewById(R.id.btn_notifications)
-        btnNotifications.setOnClickListener {
-            navigateToInbox()
+        // History button
+        view.findViewById<ImageView>(R.id.btn_history)?.setOnClickListener {
+            startActivity(Intent(requireContext(), ScanHistoryActivity::class.java))
         }
 
-        // 4. Setup RecyclerView para sa Feed
-        setupRecyclerView(view)
+        // Load real scan counts
+        loadScanStats(view)
     }
 
-    private fun setupRecyclerView(view: View) {
-        val feedRecyclerView: RecyclerView = view.findViewById(R.id.feed_recycler_view) //
-
-        // Siguraduhin na ang layout manager ay naka-set
-        feedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        try {
-            val adapter = FeedAdapter() //
-            feedRecyclerView.adapter = adapter
-            Log.d("HomeFragment", "Adapter created.") //
-        } catch (e: Exception) {
-            Log.e("HomeFragment", "Error: ${e.message}") //
+    override fun onResume() {
+        super.onResume()
+        // Refresh every time user comes back to home screen
+        view?.let {
+            it.findViewById<TextView>(R.id.tv_username)?.text =
+                sessionManager.getUser()?.username ?: "User"
+            loadScanStats(it)
         }
     }
 
-    private fun navigateToInbox() {
-        val inboxFragment = InboxFragment()
+    private fun loadScanStats(view: View) {
+        val token = sessionManager.getBearerToken() ?: return
 
-        // Gagamit tayo ng requireActivity().supportFragmentManager para mahanap ang ID sa Dashboard
-        requireActivity().supportFragmentManager.beginTransaction().apply {
-            // Animation para smooth ang transition
-            setCustomAnimations(
-                android.R.anim.fade_in,
-                android.R.anim.fade_out,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            // pinalitan natin ng 'fragmentContainer' para mag-match sa activity_dashboard.xml mo
-            replace(R.id.fragmentContainer, inboxFragment)
-            addToBackStack(null) // Para makabalik sa Home gamit ang back button
-            commit()
-        }
+        val tvTotalScans = view.findViewById<TextView>(R.id.tv_total_scans)
+        val tvThisWeek   = view.findViewById<TextView>(R.id.tv_this_week) // ✅ correct ID
 
-        Log.d("HomeFragment", "Navigating to InboxFragment...")
+        RetrofitClient.instance.getScanHistory(token)
+            .enqueue(object : Callback<List<ScanHistoryResponse>> {
+                override fun onResponse(
+                    call: Call<List<ScanHistoryResponse>>,
+                    response: Response<List<ScanHistoryResponse>>
+                ) {
+                    if (!isAdded) return
+
+                    if (response.isSuccessful) {
+                        val scans = response.body() ?: emptyList()
+
+                        // Total scans
+                        val totalScans = scans.size
+
+                        // This week — same logic as web DashboardPage.jsx
+                        val thisWeek = scans.count { scan ->
+                            try {
+                                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+                                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                                val scanTime = sdf.parse(scan.scanned_at ?: "")?.time ?: 0L
+                                val diffDays = (System.currentTimeMillis() - scanTime) / (1000 * 60 * 60 * 24)
+                                diffDays in 0..7
+                            } catch (e: Exception) { false }
+                        }
+
+                        Log.d("HomeFragment", "Total: $totalScans | This week: $thisWeek")
+
+                        activity?.runOnUiThread {
+                            tvTotalScans?.text = totalScans.toString()
+                            tvThisWeek?.text   = thisWeek.toString()
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<List<ScanHistoryResponse>>, t: Throwable) {
+                    Log.e("HomeFragment", "Failed to load scan stats: ${t.message}")
+                }
+            })
     }
 }

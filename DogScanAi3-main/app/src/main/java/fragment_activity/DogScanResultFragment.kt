@@ -16,6 +16,10 @@ import network.model.RetrofitClient
 import network.model.SaveScanRequest
 import network.model.SaveScanResponse
 import network.model.ScanPrediction
+import network.model.UploadImageResponse
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -61,7 +65,7 @@ class DogScanResultFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_details_header)?.text =
                 if (scanType == "disease") "Disease Details" else "Analysis Details"
 
-            // Image
+            // Image preview
             if (!path.isNullOrEmpty()) {
                 val imgFile = File(path)
                 if (imgFile.exists()) {
@@ -85,9 +89,9 @@ class DogScanResultFragment : Fragment() {
                 }
             }
 
-            // Save button
+            // ✅ FIXED Save button — upload image first, then save scan with server URL
             view.findViewById<Button>(R.id.save_button)?.setOnClickListener {
-                saveScanToDatabase(
+                uploadImageThenSave(
                     view      = view,
                     path      = path ?: "",
                     title     = title,
@@ -109,13 +113,14 @@ class DogScanResultFragment : Fragment() {
         }
     }
 
-    private fun saveScanToDatabase(
+    // ✅ STEP 1 — Upload the image file to the server, get back a real URL
+    private fun uploadImageThenSave(
         view: View,
         path: String,
         title: String,
         className: String,
         accuracy: Double,
-        scanType: String = "breed"
+        scanType: String
     ) {
         val prefs = requireContext().getSharedPreferences("user_session", Context.MODE_PRIVATE)
         val token = prefs.getString("token", null)
@@ -125,15 +130,86 @@ class DogScanResultFragment : Fragment() {
             return
         }
 
-        // ✅ DEBUG - log what we're sending
-        Log.d(TAG, ">>> TOKEN: $token")
-        Log.d(TAG, ">>> scan_type: $scanType")
-        Log.d(TAG, ">>> image_url: $path")
-        Log.d(TAG, ">>> class_name: $className | display_name: $title | confidence: $accuracy")
-
         val saveBtn = view.findViewById<Button>(R.id.save_button)
         saveBtn?.isEnabled = false
-        saveBtn?.text = "Saving..."
+        saveBtn?.text = "Uploading..."
+
+        val file = File(path)
+
+        // If no valid file path, save with empty image_url
+        if (path.isEmpty() || !file.exists()) {
+            Log.w(TAG, "No image file found, saving without image")
+            saveScanToDatabase(
+                view      = view,
+                imageUrl  = "",
+                title     = title,
+                className = className,
+                accuracy  = accuracy,
+                scanType  = scanType,
+                token     = token
+            )
+            return
+        }
+
+        // Build multipart request
+        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        val imagePart   = MultipartBody.Part.createFormData("image", file.name, requestFile)
+
+        Log.d(TAG, ">>> Uploading image: ${file.name}")
+
+        RetrofitClient.instance.uploadImage("Bearer $token", imagePart)
+            .enqueue(object : Callback<UploadImageResponse> {
+                override fun onResponse(
+                    call: Call<UploadImageResponse>,
+                    response: Response<UploadImageResponse>
+                ) {
+                    val serverImageUrl = response.body()?.image_url
+
+                    Log.d(TAG, ">>> Upload response code: ${response.code()}")
+                    Log.d(TAG, ">>> Server image URL: $serverImageUrl")
+
+                    if (response.isSuccessful && !serverImageUrl.isNullOrEmpty()) {
+                        // ✅ STEP 2 — Now save scan with the real server URL
+                        saveBtn?.text = "Saving..."
+                        saveScanToDatabase(
+                            view      = view,
+                            imageUrl  = serverImageUrl,  // ✅ real server URL, not local path
+                            title     = title,
+                            className = className,
+                            accuracy  = accuracy,
+                            scanType  = scanType,
+                            token     = token
+                        )
+                    } else {
+                        Log.e(TAG, ">>> Upload failed: ${response.errorBody()?.string()}")
+                        saveBtn?.isEnabled = true
+                        saveBtn?.text = "Save Result"
+                        Toast.makeText(context, "Image upload failed", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<UploadImageResponse>, t: Throwable) {
+                    Log.e(TAG, ">>> Upload error: ${t.message}", t)
+                    saveBtn?.isEnabled = true
+                    saveBtn?.text = "Save Result"
+                    Toast.makeText(context, "Upload error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    // ✅ STEP 2 — Save scan to database using the uploaded server image URL
+    private fun saveScanToDatabase(
+        view: View,
+        imageUrl: String,   // ✅ now always a server URL like http://192.168.137.1:5000/uploads/abc.jpg
+        title: String,
+        className: String,
+        accuracy: Double,
+        scanType: String,
+        token: String
+    ) {
+        Log.d(TAG, ">>> Saving scan with image_url: $imageUrl")
+
+        val saveBtn = view.findViewById<Button>(R.id.save_button)
 
         val prediction = ScanPrediction(
             rank         = 1,
@@ -143,7 +219,7 @@ class DogScanResultFragment : Fragment() {
         )
 
         val request = SaveScanRequest(
-            image_url   = path,
+            image_url   = imageUrl,   // ✅ server URL, not local path
             predictions = listOf(prediction),
             scan_type   = scanType
         )
@@ -154,11 +230,8 @@ class DogScanResultFragment : Fragment() {
                     call: Call<SaveScanResponse>,
                     response: Response<SaveScanResponse>
                 ) {
-                    // ✅ DEBUG - log exact URL and full response
-                    Log.d(TAG, ">>> URL: ${call.request().url}")
-                    Log.d(TAG, ">>> Code: ${response.code()}")
-                    Log.d(TAG, ">>> Error body: ${response.errorBody()?.string()}")
-                    Log.d(TAG, ">>> Success body: ${response.body()}")
+                    Log.d(TAG, ">>> Save code: ${response.code()}")
+                    Log.d(TAG, ">>> Save body: ${response.body()}")
 
                     if (response.isSuccessful && response.body()?.success == true) {
                         saveBtn?.text = "Saved ✓"
@@ -178,8 +251,7 @@ class DogScanResultFragment : Fragment() {
                 override fun onFailure(call: Call<SaveScanResponse>, t: Throwable) {
                     saveBtn?.isEnabled = true
                     saveBtn?.text = "Save Result"
-                    Log.e(TAG, ">>> URL: ${call.request().url}")
-                    Log.e(TAG, ">>> Failure: ${t.message}", t)
+                    Log.e(TAG, ">>> Save error: ${t.message}", t)
                     Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })

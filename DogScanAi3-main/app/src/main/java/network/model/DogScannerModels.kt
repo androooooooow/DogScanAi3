@@ -108,3 +108,29 @@ data class ScanPredictionItem(
     @SerializedName("display_name") val display_name: String?,
     @SerializedName("confidence") val confidence: Double?
 )
+data class UploadImageResponse(
+    @SerializedName("image_url") val image_url: String?  // e.g. "http://192.168.137.1:5000/uploads/abc.jpg"
+)data class UpdateUsernameRequest(
+    @SerializedName("username") val username: String,
+    @SerializedName("current_password") val current_password: String
+)
+
+// ✅ For PUT /api/profile/email
+data class UpdateEmailRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("current_password") val current_password: String
+)
+
+// ✅ For PUT /api/profile/password
+data class UpdatePasswordRequest(
+    @SerializedName("current_password") val current_password: String,
+    @SerializedName("new_password") val new_password: String
+)
+
+// ✅ Shared response model for all profile updates
+data class UpdateProfileResponse(
+    @SerializedName("success") val success: Boolean?,
+    @SerializedName("user") val user: User?,
+    @SerializedName("requires_relogin") val requires_relogin: Boolean? = false,  // ✅ this is missing
+    @SerializedName("error") val error: String? = null
+)

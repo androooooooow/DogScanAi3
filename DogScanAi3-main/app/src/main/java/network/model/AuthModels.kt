@@ -39,9 +39,5 @@ data class UpdateProfileRequest(
 )
 
 // ✅ FIX: Palitan ang 'UserData' ng 'User' (yung class na nasa itaas)
-data class UpdateProfileResponse(
-    val success: Boolean,
-    val message: String,
-    val user: User? // <--- DAPAT 'User' ITO, HINDI 'UserData'
-)
+
 

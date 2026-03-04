@@ -6,9 +6,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.databinding.ActivityEditProfileBinding
-import network.model.RetrofitClient
-import network.model.UpdateProfileRequest
-import network.model.UpdateProfileResponse
+import network.api.RetrofitClient
+import network.model.UpdateEmailRequest
+import network.model.UpdatePasswordRequest
+import network.model.UpdateUsernameRequest
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -33,88 +35,114 @@ class EditProfileActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
 
         binding.btnSaveProfile.setOnClickListener {
-            val name = binding.etEditName.text.toString().trim()
-            val email = binding.etEditEmail.text.toString().trim()
-            val password = binding.etEditPassword.text.toString().trim()
+            val newUsername     = binding.etEditName.text.toString().trim()
+            val newEmail        = binding.etEditEmail.text.toString().trim()
+            val currentPassword = binding.etCurrentPassword.text.toString().trim()
+            val newPassword     = binding.etEditPassword.text.toString().trim()
 
-            // ✅ Validate fields
-            if (name.isEmpty() || email.isEmpty()) {
+            if (newUsername.isEmpty() || newEmail.isEmpty()) {
                 Toast.makeText(this, "Name and Email are required", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // ✅ Get and validate token
-            val rawToken = sessionManager.getToken()
-            if (rawToken.isNullOrEmpty()) {
+            if (currentPassword.isEmpty()) {
+                Toast.makeText(this, "Current password is required to save changes", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val token = sessionManager.getBearerToken()
+            if (token.isNullOrEmpty()) {
                 Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // ✅ Match the same token format as your other API calls
-            val token = "Bearer $rawToken"
+            val originalUsername = currentUser?.username ?: ""
+            val originalEmail    = currentUser?.email ?: ""
 
-            Log.d("EditProfile", "Token: $token")
-            Log.d("EditProfile", "Sending: username=$name, email=$email")
+            val usernameChanged = newUsername != originalUsername
+            val emailChanged    = newEmail != originalEmail
+            val passwordChanged = newPassword.isNotEmpty()
 
-            val request = UpdateProfileRequest(
-                username = name,
-                email = email,
-                password = if (password.isEmpty()) null else password
-            )
+            if (!usernameChanged && !emailChanged && !passwordChanged) {
+                Toast.makeText(this, "No changes detected", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            RetrofitClient.instance.updateProfile(token, request)
-                .enqueue(object : Callback<UpdateProfileResponse> {
-                    override fun onResponse(
-                        call: Call<UpdateProfileResponse>,
-                        response: Response<UpdateProfileResponse>
-                    ) {
-                        // ✅ Log everything for debugging
-                        val errorBody = response.errorBody()?.string()
-                        Log.d("EditProfile", "Code: ${response.code()}")
-                        Log.d("EditProfile", "Body: ${response.body()}")
-                        Log.d("EditProfile", "ErrorBody: $errorBody")
-
-                        if (response.isSuccessful && response.body()?.success == true) {
-                            val updatedUser = response.body()?.user
-                            if (updatedUser != null) {
-                                sessionManager.saveUser(updatedUser)
-                                Toast.makeText(
-                                    this@EditProfileActivity,
-                                    "Profile Updated Successfully!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                finish()
-                            } else {
-                                Toast.makeText(
-                                    this@EditProfileActivity,
-                                    "Updated but user data missing",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        } else {
-                            val errorMsg = when (response.code()) {
-                                401 -> "Session expired. Please login again."
-                                400 -> "Invalid data: $errorBody"
-                                404 -> "Endpoint not found. Check API route."
-                                else -> "Update Failed! ${response.code()}: $errorBody"
-                            }
-                            Toast.makeText(
-                                this@EditProfileActivity,
-                                errorMsg,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-
-                    override fun onFailure(call: Call<UpdateProfileResponse>, t: Throwable) {
-                        Log.e("EditProfile", "Network error: ${t.message}")
-                        Toast.makeText(
-                            this@EditProfileActivity,
-                            "Network Error: ${t.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                })
+            if (usernameChanged) updateUsername(token, newUsername, currentPassword)
+            if (emailChanged)    updateEmail(token, newEmail, currentPassword)
+            if (passwordChanged) updatePassword(token, currentPassword, newPassword)
         }
+    }
+
+    private fun updateUsername(token: String, username: String, currentPassword: String) {
+        RetrofitClient.instance.updateUsername(
+            token,
+            UpdateUsernameRequest(username = username, current_password = currentPassword)
+        ).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                Log.d("EditProfile", "Username: ${response.code()}")
+                if (response.isSuccessful) {
+                    // ✅ Save updated username locally so ProfileFragment shows it immediately
+                    val currentUser = sessionManager.getUser()
+                    if (currentUser != null) {
+                        sessionManager.saveUser(currentUser.copy(username = username))
+                    }
+                    Toast.makeText(this@EditProfileActivity, "Username updated!", Toast.LENGTH_SHORT).show()
+                    finish() // ✅ onResume in ProfileFragment will pick up the new name
+                } else {
+                    val err = response.errorBody()?.string() ?: "Unknown error"
+                    Toast.makeText(this@EditProfileActivity, "Username error: $err", Toast.LENGTH_LONG).show()
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@EditProfileActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun updateEmail(token: String, email: String, currentPassword: String) {
+        RetrofitClient.instance.updateEmail(
+            token,
+            UpdateEmailRequest(email = email, current_password = currentPassword)
+        ).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                Log.d("EditProfile", "Email: ${response.code()}")
+                if (response.isSuccessful) {
+                    // ✅ Email change requires re-login (backend increments session_version)
+                    Toast.makeText(this@EditProfileActivity, "Email updated! Please login again.", Toast.LENGTH_LONG).show()
+                    sessionManager.clearSession()
+                    finish()
+                } else {
+                    val err = response.errorBody()?.string() ?: "Unknown error"
+                    Toast.makeText(this@EditProfileActivity, "Email error: $err", Toast.LENGTH_LONG).show()
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@EditProfileActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun updatePassword(token: String, currentPassword: String, newPassword: String) {
+        RetrofitClient.instance.updatePassword(
+            token,
+            UpdatePasswordRequest(current_password = currentPassword, new_password = newPassword)
+        ).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                Log.d("EditProfile", "Password: ${response.code()}")
+                if (response.isSuccessful) {
+                    // ✅ Password change requires re-login (backend increments session_version)
+                    Toast.makeText(this@EditProfileActivity, "Password updated! Please login again.", Toast.LENGTH_LONG).show()
+                    sessionManager.clearSession()
+                    finish()
+                } else {
+                    val err = response.errorBody()?.string() ?: "Unknown error"
+                    Toast.makeText(this@EditProfileActivity, "Password error: $err", Toast.LENGTH_LONG).show()
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@EditProfileActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }
