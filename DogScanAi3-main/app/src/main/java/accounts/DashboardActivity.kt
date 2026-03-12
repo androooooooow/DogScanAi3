@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.ActivityDashboardBinding
 import com.firstapp.dogscanai.fragment_activity.HomeFragment
-// Siguraduhin na tama ang package path ng CameraActivity mo
 import fragment_activity.CameraActivity
 import fragment_activity.DogScanResultFragment
 import fragment_activity.ProfileFragment
@@ -35,6 +34,18 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
+        // Change selected item background from purple to blue
+        binding.bottomNavigationView.itemActiveIndicatorColor =
+            android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.blue)
+            )
+
+        // Change ripple/hover color from purple to blue
+        binding.bottomNavigationView.itemRippleColor =
+            android.content.res.ColorStateList.valueOf(
+                androidx.core.content.ContextCompat.getColor(this, R.color.blue)
+            )
+
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> { loadFragment(HomeFragment()); true }
@@ -45,17 +56,14 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        // Hide placeholder item for the FAB gap
         binding.bottomNavigationView.menu.findItem(R.id.navigation_placeholder)?.apply {
             isEnabled = false
             isVisible = false
         }
 
-        // FIXED: Click Listener for Camera FAB
         binding.fabCamera.setOnClickListener {
             Log.d("DASHBOARD", "Camera FAB clicked")
             try {
-                // Tiyakin na ang CameraActivity ay declared sa Manifest
                 val intent = Intent(this, CameraActivity::class.java)
                 startActivity(intent)
             } catch (e: Exception) {

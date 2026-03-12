@@ -5,93 +5,112 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:padding="12dp">
 
-        <!-- ✅ Dog scan image -->
+        <!-- Scanned Image -->
         <ImageView
             android:id="@+id/iv_scan_image"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
             android:scaleType="centerCrop"
-            android:clipToOutline="true"
-            android:background="@drawable/rounded_image_bg"
-            android:src="@drawable/aspin" />
+            android:contentDescription="Scanned dog image" />
 
+        <!-- Breed DB Image -->
+        <ImageView
+            android:id="@+id/iv_breed_info_image"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:contentDescription="Breed reference image" />
+
+        <!-- Title + Badge Row -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="14dp"
-            android:layout_marginEnd="8dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
 
             <TextView
                 android:id="@+id/tv_scan_title"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Unknown"
-                android:textSize="16sp"
+                android:layout_weight="1"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#212121"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:textColor="#212121" />
 
             <TextView
                 android:id="@+id/tv_scan_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="BREED"
-                android:textSize="10sp"
-                android:textColor="#FFFFFF"
-                android:background="#4A69FF"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:id="@+id/tv_scan_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Date"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:background="#E3F2FD"
+                android:textColor="#1565C0"
                 android:textSize="12sp"
-                android:textColor="#9E9E9E" />
+                android:textStyle="bold" />
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <!-- Date -->
+        <TextView
+            android:id="@+id/tv_scan_date"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:textSize="13sp"
+            android:textColor="#757575"
+            android:layout_marginTop="4dp" />
 
-            <TextView
-                android:id="@+id/tv_scan_confidence"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0.0%"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#4CAF50" />
+        <!-- Confidence -->
+        <TextView
+            android:id="@+id/tv_scan_confidence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#388E3C"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="confidence"
-                android:textSize="10sp"
-                android:textColor="#BDBDBD" />
+        <!-- Temperament -->
+        <TextView
+            android:id="@+id/tv_scan_temperament"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#5D4037"
+            android:layout_marginTop="6dp"
+            android:visibility="gone" />
 
-        </LinearLayout>
+        <!-- Origin -->
+        <TextView
+            android:id="@+id/tv_scan_origin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#546E7A"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/tv_scan_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#424242"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 

@@ -3,6 +3,7 @@ package network.api
 import com.dogscanai.models.AuthResponse
 import com.dogscanai.models.RegisterRequest
 import network.model.ApiResponse
+import network.model.BreedDetailResponse
 import network.model.BreedResponse
 import network.model.LoginRequest
 import network.model.ProfileResponse
@@ -19,6 +20,7 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -41,7 +43,6 @@ interface ApiService {
     @POST("api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ApiResponse<Unit>>
 
-    // ✅ Correct backend profile endpoints — returns raw ResponseBody to avoid model conflicts
     @PUT("api/profile/username")
     fun updateUsername(
         @Header("Authorization") token: String,
@@ -88,4 +89,22 @@ interface ApiService {
     fun getScanHistory(
         @Header("Authorization") token: String
     ): Call<List<ScanHistoryResponse>>
+
+    // ✅ NEW - Get breed details from DB by breedId
+    @GET("api/scans/breed/{breedId}")
+    fun getBreedDetail(
+        @Header("Authorization") token: String,
+        @Path("breedId") breedId: Int
+    ): Call<BreedDetailResponse>
+
+    // ✅ NEW - Delete scan by id
+    @DELETE("api/scans/{id}")
+    fun deleteScan(
+        @Header("Authorization") token: String,
+        @Path("id") scanId: Int
+    ): Call<ResponseBody>
+
+    // ✅ NEW - Get public scan usage (no auth needed)
+    @GET("api/scans/public/usage")
+    fun getPublicScanUsage(): Call<ResponseBody>
 }

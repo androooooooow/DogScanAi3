@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -36,7 +35,6 @@
 
     </LinearLayout>
 
-    <!-- Empty State -->
     <TextView
         android:id="@+id/tv_empty"
         android:layout_width="match_parent"
@@ -49,7 +47,6 @@
         android:padding="32dp"
         android:visibility="gone" />
 
-    <!-- Scrollable History List -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

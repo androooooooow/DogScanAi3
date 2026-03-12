@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.R
+import fragment_activity.CameraActivity
 import fragment_activity.ScanHistoryActivity
 import network.api.RetrofitClient
 import network.model.ScanHistoryResponse
@@ -41,8 +42,16 @@ class HomeFragment : Fragment() {
         val user = sessionManager.getUser()
         view.findViewById<TextView>(R.id.tv_username)?.text = user?.username ?: "User"
 
-        // History button
-        view.findViewById<ImageView>(R.id.btn_history)?.setOnClickListener {
+        // History button (top right)
+
+
+        // Quick Action - Scan New → go to CameraActivity
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_scan_new)?.setOnClickListener {
+            startActivity(Intent(requireContext(), CameraActivity::class.java))
+        }
+
+        // Quick Action - History → go to ScanHistoryActivity
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_history)?.setOnClickListener {
             startActivity(Intent(requireContext(), ScanHistoryActivity::class.java))
         }
 
@@ -52,7 +61,6 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh every time user comes back to home screen
         view?.let {
             it.findViewById<TextView>(R.id.tv_username)?.text =
                 sessionManager.getUser()?.username ?: "User"
@@ -64,7 +72,7 @@ class HomeFragment : Fragment() {
         val token = sessionManager.getBearerToken() ?: return
 
         val tvTotalScans = view.findViewById<TextView>(R.id.tv_total_scans)
-        val tvThisWeek   = view.findViewById<TextView>(R.id.tv_this_week) // ✅ correct ID
+        val tvThisWeek   = view.findViewById<TextView>(R.id.tv_this_week)
 
         RetrofitClient.instance.getScanHistory(token)
             .enqueue(object : Callback<List<ScanHistoryResponse>> {
@@ -77,10 +85,8 @@ class HomeFragment : Fragment() {
                     if (response.isSuccessful) {
                         val scans = response.body() ?: emptyList()
 
-                        // Total scans
                         val totalScans = scans.size
 
-                        // This week — same logic as web DashboardPage.jsx
                         val thisWeek = scans.count { scan ->
                             try {
                                 val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())

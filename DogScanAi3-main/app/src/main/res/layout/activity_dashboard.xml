@@ -17,9 +17,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="35dp"
         android:src="@drawable/camera_icon"
-        app:tint="@android:color/white" />
+        app:tint="@android:color/white"
+        android:backgroundTint="@color/blue"/>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
@@ -27,6 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@android:color/white"
+        app:itemRippleColor="@color/blue"
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled" />
 

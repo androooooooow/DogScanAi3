@@ -21,8 +21,6 @@ import java.util.*
 
 class ScanHistoryActivity : AppCompatActivity() {
     private val TAG = "ScanHistoryActivity"
-
-    // ✅ Your server IP — change this if your IP changes
     private val SERVER_IP = "http://192.168.137.1:5000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,21 +56,13 @@ class ScanHistoryActivity : AppCompatActivity() {
                         displayHistory(scans)
                     } else {
                         Log.e(TAG, "History error: ${response.code()}")
-                        Toast.makeText(
-                            this@ScanHistoryActivity,
-                            "Failed to load history",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this@ScanHistoryActivity, "Failed to load history", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<List<ScanHistoryResponse>>, t: Throwable) {
                     Log.e(TAG, "History network error", t)
-                    Toast.makeText(
-                        this@ScanHistoryActivity,
-                        "Network error: ${t.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@ScanHistoryActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }
@@ -94,24 +84,82 @@ class ScanHistoryActivity : AppCompatActivity() {
         scans.forEach { scan ->
             val itemView = inflater.inflate(R.layout.item_scan_history, container, false)
 
-            // Text fields
+            val topPrediction = scan.predictions?.minByOrNull { it.rank ?: 99 }
+            val breedInfo = topPrediction?.breed_info
+
+            // Title
             itemView.findViewById<TextView>(R.id.tv_scan_title)?.text =
-                scan.top_prediction ?: "Unknown"
-            itemView.findViewById<TextView>(R.id.tv_scan_type)?.text =
-                scan.scan_type?.uppercase() ?: "SCAN"
+                topPrediction?.display_name ?: "Unknown"
+
+            // Scan type badge
+            val scanType = scan.scan_type?.uppercase() ?: "SCAN"
+            itemView.findViewById<TextView>(R.id.tv_scan_type)?.text = scanType
+
+            // Date
             itemView.findViewById<TextView>(R.id.tv_scan_date)?.text =
                 formatDate(scan.scanned_at)
+
+            // Confidence
             itemView.findViewById<TextView>(R.id.tv_scan_confidence)?.text =
-                String.format("%.2f%%", scan.confidence ?: 0.0)
+                String.format("%.2f%%", topPrediction?.confidence ?: 0.0)
 
-            // ✅ Load image using Glide
+            // ✅ Temperament (e.g. "loyal, adaptable, resilient")
+            val temperament = breedInfo?.temperament
+            itemView.findViewById<TextView>(R.id.tv_scan_temperament)?.apply {
+                if (!temperament.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = temperament.joinToString(", ")
+                } else {
+                    visibility = View.GONE
+                }
+            }
+
+            // ✅ Origin
+            val origin = breedInfo?.origin
+            itemView.findViewById<TextView>(R.id.tv_scan_origin)?.apply {
+                if (!origin.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = "Origin: $origin"
+                } else {
+                    visibility = View.GONE
+                }
+            }
+
+            // ✅ Description
+            val description = breedInfo?.description
+            itemView.findViewById<TextView>(R.id.tv_scan_description)?.apply {
+                if (!description.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = description
+                } else {
+                    visibility = View.GONE
+                }
+            }
+
+            // ✅ Breed DB image (from breed_info)
+            val breedDbImageView = itemView.findViewById<ImageView>(R.id.iv_breed_info_image)
+            val breedImageUrl = breedInfo?.image_url
+            if (!breedImageUrl.isNullOrEmpty()) {
+                val fullBreedImageUrl = if (breedImageUrl.startsWith("http")) {
+                    breedImageUrl
+                } else {
+                    "$SERVER_IP$breedImageUrl"
+                }
+                breedDbImageView?.visibility = View.VISIBLE
+                Glide.with(this)
+                    .load(fullBreedImageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.drawable.aspin)
+                    .error(R.drawable.aspin)
+                    .centerCrop()
+                    .into(breedDbImageView!!)
+            } else {
+                breedDbImageView?.visibility = View.GONE
+            }
+
+            // Scanned image
             val imageView = itemView.findViewById<ImageView>(R.id.iv_scan_image)
-            val imageUrl = scan.image_url
-
-            Log.d(TAG, ">>> Scan: ${scan.top_prediction} | image_url: $imageUrl")
-
-            // ✅ Fix: web scans save with localhost — replace with real IP for mobile
-            val fullImageUrl = imageUrl
+            val fullImageUrl = scan.image_url
                 ?.replace("http://localhost:5000", SERVER_IP)
                 ?.replace("http://127.0.0.1:5000", SERVER_IP)
 
@@ -131,7 +179,6 @@ class ScanHistoryActivity : AppCompatActivity() {
         }
     }
 
-    // Format ISO date string to readable format
     private fun formatDate(dateString: String?): String {
         if (dateString.isNullOrEmpty()) return "--"
         return try {

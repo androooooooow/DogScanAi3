@@ -59,23 +59,20 @@ data class SaveResponse(
     @SerializedName("scan_date") val scanDate: String?
 )
 
-// ✅ FIXED - scan_type is REQUIRED by backend (validates "breed" or "disease")
 data class SaveScanRequest(
     @SerializedName("image_url") val image_url: String,
     @SerializedName("predictions") val predictions: List<ScanPrediction>,
-    @SerializedName("scan_type") val scan_type: String = "breed"  // ✅ backend requires this
+    @SerializedName("scan_type") val scan_type: String = "breed"
 )
 
-// ✅ FIXED - added breed_id (backend stores it), made fields non-nullable with defaults
 data class ScanPrediction(
     @SerializedName("rank") val rank: Int,
-    @SerializedName("breed_id") val breed_id: Int? = null,        // ✅ backend expects this
+    @SerializedName("breed_id") val breed_id: Int? = null,
     @SerializedName("class_name") val class_name: String = "",
     @SerializedName("display_name") val display_name: String = "",
     @SerializedName("confidence") val confidence: Double = 0.0
 )
 
-// ✅ FIXED - backend returns {scan_id, scanned_at} on 201 success
 data class SaveScanResponse(
     @SerializedName("scan_id") val scan_id: Int?,
     @SerializedName("scanned_at") val scanned_at: String?
@@ -84,12 +81,11 @@ data class SaveScanResponse(
         get() = scan_id != null
 }
 
-// ✅ FIXED - matches GET /api/scans response, scan_type now from actual data
 data class ScanHistoryResponse(
     @SerializedName("id") val id: Int?,
     @SerializedName("image_url") val image_url: String?,
     @SerializedName("scanned_at") val scanned_at: String?,
-    @SerializedName("scan_type") val scan_type: String?,           // ✅ backend returns this field
+    @SerializedName("scan_type") val scan_type: String?,
     @SerializedName("predictions") val predictions: List<ScanPredictionItem>?
 ) {
     val top_prediction: String?
@@ -99,38 +95,90 @@ data class ScanHistoryResponse(
         get() = predictions?.minByOrNull { it.rank ?: 99 }?.confidence
 }
 
-// ✅ unchanged - already correct
+// ✅ UPDATED - added breed_info
 data class ScanPredictionItem(
     @SerializedName("id") val id: Int?,
     @SerializedName("rank") val rank: Int?,
     @SerializedName("breed_id") val breed_id: Int?,
     @SerializedName("class_name") val class_name: String?,
     @SerializedName("display_name") val display_name: String?,
-    @SerializedName("confidence") val confidence: Double?
+    @SerializedName("confidence") val confidence: Double?,
+    @SerializedName("breed_info") val breed_info: BreedInfo? // ✅ NEW
 )
+
+// ✅ NEW - breed_info object from API response
+data class BreedInfo(
+    @SerializedName("size") val size: String?,
+    @SerializedName("origin") val origin: String?,
+    @SerializedName("breed_group") val breed_group: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("temperament") val temperament: List<String>?,
+    @SerializedName("image_url") val image_url: String?,
+    @SerializedName("height_min") val height_min: Int?,
+    @SerializedName("height_max") val height_max: Int?,
+    @SerializedName("weight_min") val weight_min: Int?,
+    @SerializedName("weight_max") val weight_max: Int?,
+    @SerializedName("lifespan_min") val lifespan_min: Int?,
+    @SerializedName("lifespan_max") val lifespan_max: Int?,
+    @SerializedName("health_considerations") val health_considerations: String?,
+    @SerializedName("key_health_tips") val key_health_tips: String?,
+    @SerializedName("snout") val snout: String?,
+    @SerializedName("ears") val ears: String?,
+    @SerializedName("coat") val coat: String?,
+    @SerializedName("tail") val tail: String?
+)
+
 data class UploadImageResponse(
-    @SerializedName("image_url") val image_url: String?  // e.g. "http://192.168.137.1:5000/uploads/abc.jpg"
-)data class UpdateUsernameRequest(
+    @SerializedName("image_url") val image_url: String?
+)
+
+data class UpdateUsernameRequest(
     @SerializedName("username") val username: String,
     @SerializedName("current_password") val current_password: String
 )
 
-// ✅ For PUT /api/profile/email
 data class UpdateEmailRequest(
     @SerializedName("email") val email: String,
     @SerializedName("current_password") val current_password: String
 )
 
-// ✅ For PUT /api/profile/password
 data class UpdatePasswordRequest(
     @SerializedName("current_password") val current_password: String,
     @SerializedName("new_password") val new_password: String
 )
 
-// ✅ Shared response model for all profile updates
 data class UpdateProfileResponse(
     @SerializedName("success") val success: Boolean?,
     @SerializedName("user") val user: User?,
-    @SerializedName("requires_relogin") val requires_relogin: Boolean? = false,  // ✅ this is missing
+    @SerializedName("requires_relogin") val requires_relogin: Boolean? = false,
     @SerializedName("error") val error: String? = null
 )
+
+// ✅ NEW - Breed detail response from GET /api/scans/breed/:breedId
+data class BreedDetailResponse(
+    @SerializedName("breed_id") val breed_id: Int?,
+    @SerializedName("class_name") val class_name: String?,
+    @SerializedName("display_name") val display_name: String?,
+    @SerializedName("image_url") val image_url: String?,
+    @SerializedName("size") val size: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("origin") val origin: String?,
+    @SerializedName("breed_group") val breed_group: String?,
+    @SerializedName("temperament") val temperament: List<String>?,
+    @SerializedName("lifespan_min") val lifespan_min: Int?,
+    @SerializedName("lifespan_max") val lifespan_max: Int?,
+    @SerializedName("height_min") val height_min: Int?,
+    @SerializedName("height_max") val height_max: Int?,
+    @SerializedName("weight_min") val weight_min: Int?,
+    @SerializedName("weight_max") val weight_max: Int?,
+    @SerializedName("health_considerations") val health_considerations: String?,
+    @SerializedName("key_health_tips") val key_health_tips: String?,
+    @SerializedName("snout") val snout: String?,
+    @SerializedName("ears") val ears: String?,
+    @SerializedName("coat") val coat: String?,
+    @SerializedName("tail") val tail: String?,
+    @SerializedName("popularity_score") val popularity_score: Int?
+) {
+    val temperamentText: String?
+        get() = temperament?.joinToString(", ")
+}

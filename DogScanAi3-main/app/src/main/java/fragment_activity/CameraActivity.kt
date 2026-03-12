@@ -85,16 +85,24 @@ class CameraActivity : AppCompatActivity() {
 
         if (isBreedMode) {
             btnBreed.setBackgroundResource(R.drawable.toggle_selected_bg)
-            btnBreed.setTextColor(resources.getColor(android.R.color.white, null))
-            btnDisease.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            btnBreed.backgroundTintList = ContextCompat.getColorStateList(this, R.color.blue)
+            btnBreed.setTextColor(android.graphics.Color.WHITE)
+
+            btnDisease.setBackgroundResource(0)
+            btnDisease.backgroundTintList = null
             btnDisease.setTextColor(android.graphics.Color.parseColor("#AAAAAA"))
+
             scanHint.text     = "Position the dog to identify its breed"
             captureLabel.text = "Scan Breed"
         } else {
             btnDisease.setBackgroundResource(R.drawable.toggle_selected_bg)
-            btnDisease.setTextColor(resources.getColor(android.R.color.white, null))
-            btnBreed.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            btnDisease.backgroundTintList = ContextCompat.getColorStateList(this, R.color.blue)
+            btnDisease.setTextColor(android.graphics.Color.WHITE)
+
+            btnBreed.setBackgroundResource(0)
+            btnBreed.backgroundTintList = null
             btnBreed.setTextColor(android.graphics.Color.parseColor("#AAAAAA"))
+
             scanHint.text     = "Position the affected area to detect disease"
             captureLabel.text = "Scan Disease"
         }
@@ -149,7 +157,6 @@ class CameraActivity : AppCompatActivity() {
 
     private fun openGallery() {
         try {
-            Log.d(TAG, "Opening gallery...")
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "image/*"
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -197,7 +204,6 @@ class CameraActivity : AppCompatActivity() {
             inputStream?.close()
 
             if (bytes != null && bytes.isNotEmpty()) {
-                Log.d(TAG, "Gallery image loaded: ${bytes.size} bytes")
                 val tempFile = File(externalCacheDir, "upload_${System.currentTimeMillis()}.jpg")
                 val base64 = compressAndEncodeFromBytes(bytes, tempFile)
 
@@ -253,7 +259,6 @@ class CameraActivity : AppCompatActivity() {
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Log.d(TAG, "Photo saved: ${photoFile.absolutePath}")
                     val base64 = compressAndEncode(photoFile)
                     if (isBreedMode) uploadBreedImage(base64, photoFile.absolutePath)
                     else             uploadDiseaseImage(base64, photoFile.absolutePath)
@@ -322,17 +327,19 @@ class CameraActivity : AppCompatActivity() {
         try {
             hideCamera()
 
-            // ✅ FIXED - always use top breed name regardless of result_type
-            val breed = if (data.top_breeds.isNotEmpty())
-                data.top_breeds[0].display_name ?: data.top_breeds[0].class_name ?: "Unknown"
-            else "Unknown"
+            val top = data.top_breeds.firstOrNull()
+            val breed      = top?.display_name ?: top?.class_name ?: "Unknown"
+            val confidence = top?.confidence ?: 0.0
+            val className  = top?.class_name ?: ""
+            val breedId    = top?.breed_id?.toIntOrNull() ?: -1
 
-            val confidence = if (data.top_breeds.isNotEmpty())
-                data.top_breeds[0].confidence ?: 0.0 else 0.0
+            Log.d(TAG, ">>> top_breeds[0] = ${data.top_breeds[0]}")
+            Log.d(TAG, ">>> breed_id raw = ${top?.breed_id}")
 
-            // ✅ FIXED - pass class_name so DB saves correct breed
-            val className = if (data.top_breeds.isNotEmpty())
-                data.top_breeds[0].class_name ?: "" else ""
+            // ✅ Build all predictions string to pass to fragment
+            val allBreeds = data.top_breeds.mapIndexed { i, b ->
+                "${i + 1}|${b.class_name ?: ""}|${b.display_name ?: b.class_name ?: "Unknown"}|${b.confidence ?: 0.0}|${b.breed_id ?: ""}"
+            }.joinToString(";;")
 
             val details = buildString {
                 append("Result Type: ${data.result_type}\n")
@@ -352,7 +359,9 @@ class CameraActivity : AppCompatActivity() {
                     path      = path,
                     details   = details,
                     scanType  = "breed",
-                    className = className  // ✅ correct class_name passed
+                    className = className,
+                    breedId   = breedId,
+                    allBreeds = allBreeds  // ✅ NEW
                 ))
                 .addToBackStack("result")
                 .commit()
@@ -368,6 +377,11 @@ class CameraActivity : AppCompatActivity() {
             hideCamera()
 
             val top = data.top_diseases.firstOrNull()
+
+            // ✅ Build all disease predictions string
+            val allDiseases = data.top_diseases.mapIndexed { i, d ->
+                "${i + 1}|${d.class_name ?: ""}|${d.display_name ?: d.class_name ?: "Unknown"}|${d.confidence ?: 0.0}|"
+            }.joinToString(";;")
 
             val details = buildString {
                 append("Description: ${top?.description ?: "N/A"}\n\n")
@@ -388,7 +402,8 @@ class CameraActivity : AppCompatActivity() {
                     path      = path,
                     details   = details,
                     scanType  = "disease",
-                    className = top?.class_name   ?: ""
+                    className = top?.class_name   ?: "",
+                    allBreeds = allDiseases  // ✅ NEW
                 ))
                 .addToBackStack("result")
                 .commit()

@@ -11,8 +11,10 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.firstapp.dogscanai.R
-import network.model.RetrofitClient
+import network.api.RetrofitClient
+import network.model.BreedDetailResponse
 import network.model.SaveScanRequest
 import network.model.SaveScanResponse
 import network.model.ScanPrediction
@@ -41,12 +43,14 @@ class DogScanResultFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         try {
-            val scanType  = arguments?.getString("SCAN_TYPE") ?: "breed"
-            val title     = arguments?.getString("BREED")     ?: "Unknown"
-            val accuracy  = arguments?.getDouble("ACCURACY")  ?: 0.0
+            val scanType  = arguments?.getString("SCAN_TYPE")  ?: "breed"
+            val title     = arguments?.getString("BREED")      ?: "Unknown"
+            val accuracy  = arguments?.getDouble("ACCURACY")   ?: 0.0
             val path      = arguments?.getString("PATH")
-            val details   = arguments?.getString("DETAILS")   ?: "No details available"
+            val details   = arguments?.getString("DETAILS")    ?: "No details available"
             val className = arguments?.getString("CLASS_NAME") ?: ""
+            val breedId   = arguments?.getInt("BREED_ID")      ?: -1
+            val allBreeds = arguments?.getString("ALL_BREEDS") ?: ""  // ✅ NEW
 
             // Mode label
             val cardColor = if (scanType == "disease") "#B00020" else "#4A69FF"
@@ -65,7 +69,7 @@ class DogScanResultFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_details_header)?.text =
                 if (scanType == "disease") "Disease Details" else "Analysis Details"
 
-            // Image preview
+            // Scanned image preview
             if (!path.isNullOrEmpty()) {
                 val imgFile = File(path)
                 if (imgFile.exists()) {
@@ -75,6 +79,39 @@ class DogScanResultFragment : Fragment() {
                     view.findViewById<ImageView>(R.id.scanned_dog_image)
                         ?.setImageResource(R.drawable.aspin)
                 }
+            }
+
+            // Fetch breed details
+            if (scanType == "breed" && breedId > 0) {
+                fetchBreedDetails(view, breedId)
+            }
+
+            // ✅ Manual Save button
+            val saveBtn = view.findViewById<Button>(R.id.save_button)
+            saveBtn?.visibility = View.VISIBLE
+            saveBtn?.setOnClickListener {
+                val prefs = requireContext().getSharedPreferences("user_session", Context.MODE_PRIVATE)
+                val token = prefs.getString("token", null)
+
+                if (token == null) {
+                    Toast.makeText(context, "Please login first to save", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+
+                saveBtn.isEnabled = false
+                saveBtn.text = "Saving..."
+
+                uploadImageThenSave(
+                    view      = view,
+                    path      = path ?: "",
+                    title     = title,
+                    className = className,
+                    accuracy  = accuracy,
+                    scanType  = scanType,
+                    token     = token,
+                    breedId   = breedId,
+                    allBreeds = allBreeds  // ✅ NEW
+                )
             }
 
             // Retry button
@@ -89,22 +126,9 @@ class DogScanResultFragment : Fragment() {
                 }
             }
 
-            // ✅ FIXED Save button — upload image first, then save scan with server URL
-            view.findViewById<Button>(R.id.save_button)?.setOnClickListener {
-                uploadImageThenSave(
-                    view      = view,
-                    path      = path ?: "",
-                    title     = title,
-                    className = className,
-                    accuracy  = accuracy,
-                    scanType  = scanType
-                )
-            }
-
             // View History button
             view.findViewById<Button>(R.id.view_history_button)?.setOnClickListener {
-                val intent = Intent(requireContext(), ScanHistoryActivity::class.java)
-                startActivity(intent)
+                startActivity(Intent(requireContext(), ScanHistoryActivity::class.java))
             }
 
         } catch (e: Exception) {
@@ -113,49 +137,139 @@ class DogScanResultFragment : Fragment() {
         }
     }
 
-    // ✅ STEP 1 — Upload the image file to the server, get back a real URL
+    private fun fetchBreedDetails(view: View, breedId: Int) {
+        val prefs = requireContext().getSharedPreferences("user_session", Context.MODE_PRIVATE)
+        val token = prefs.getString("token", null) ?: return
+
+        RetrofitClient.instance.getBreedDetail("Bearer $token", breedId)
+            .enqueue(object : Callback<BreedDetailResponse> {
+                override fun onResponse(
+                    call: Call<BreedDetailResponse>,
+                    response: Response<BreedDetailResponse>
+                ) {
+                    if (!isAdded) return
+                    if (response.isSuccessful) {
+                        val breed = response.body()
+                        if (breed != null) displayBreedDetails(view, breed)
+                    } else {
+                        Log.e(TAG, ">>> Breed detail error: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<BreedDetailResponse>, t: Throwable) {
+                    Log.e(TAG, ">>> Breed detail network error: ${t.message}")
+                }
+            })
+    }
+
+    private fun displayBreedDetails(view: View, breed: BreedDetailResponse) {
+        activity?.runOnUiThread {
+            view.findViewById<CardView>(R.id.card_breed_info)?.visibility = View.VISIBLE
+
+            val breedImageView = view.findViewById<ImageView>(R.id.iv_breed_db_image)
+            if (!breed.image_url.isNullOrEmpty()) {
+                val fullImageUrl = if (breed.image_url.startsWith("http")) {
+                    breed.image_url
+                } else {
+                    "http://192.168.137.1:5000${breed.image_url}"
+                }
+                Glide.with(this)
+                    .load(fullImageUrl)
+                    .placeholder(R.drawable.aspin)
+                    .error(R.drawable.aspin)
+                    .centerCrop()
+                    .into(breedImageView!!)
+            }
+
+            view.findViewById<TextView>(R.id.tv_temperament)?.apply {
+                if (!breed.temperamentText.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = breed.temperamentText
+                }
+            }
+
+            view.findViewById<TextView>(R.id.tv_origin)?.apply {
+                if (!breed.origin.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = "Origin: ${breed.origin}"
+                }
+            }
+
+            view.findViewById<TextView>(R.id.tv_size)?.apply {
+                if (!breed.size.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = "Size: ${breed.size}"
+                }
+            }
+
+            if (breed.lifespan_min != null && breed.lifespan_max != null) {
+                view.findViewById<TextView>(R.id.tv_lifespan)?.apply {
+                    visibility = View.VISIBLE
+                    text = "Lifespan: ${breed.lifespan_min}–${breed.lifespan_max} years"
+                }
+            }
+
+            view.findViewById<TextView>(R.id.tv_breed_description)?.apply {
+                if (!breed.description.isNullOrEmpty()) {
+                    visibility = View.VISIBLE
+                    text = breed.description
+                }
+            }
+        }
+    }
+
+    // ✅ Parse allBreeds string into ScanPrediction list
+    private fun parseAllBreeds(allBreeds: String, fallbackClassName: String, fallbackTitle: String, fallbackAccuracy: Double, fallbackBreedId: Int): List<ScanPrediction> {
+        if (allBreeds.isBlank()) {
+            return listOf(ScanPrediction(
+                rank         = 1,
+                class_name   = fallbackClassName,
+                display_name = fallbackTitle,
+                confidence   = fallbackAccuracy,
+                breed_id     = if (fallbackBreedId > 0) fallbackBreedId else null
+            ))
+        }
+
+        return allBreeds.split(";;").mapNotNull { entry ->
+            val parts = entry.split("|")
+            if (parts.size >= 4) {
+                val rank        = parts[0].toIntOrNull() ?: 1
+                val clsName     = parts[1]
+                val dispName    = parts[2]
+                val conf        = parts[3].toDoubleOrNull() ?: 0.0
+                val bId         = parts.getOrNull(4)?.toIntOrNull()
+                ScanPrediction(
+                    rank         = rank,
+                    class_name   = clsName,
+                    display_name = dispName,
+                    confidence   = conf,
+                    breed_id     = bId
+                )
+            } else null
+        }
+    }
+
     private fun uploadImageThenSave(
         view: View,
         path: String,
         title: String,
         className: String,
         accuracy: Double,
-        scanType: String
+        scanType: String,
+        token: String,
+        breedId: Int = -1,
+        allBreeds: String = ""  // ✅ NEW
     ) {
-        val prefs = requireContext().getSharedPreferences("user_session", Context.MODE_PRIVATE)
-        val token = prefs.getString("token", null)
-
-        if (token == null) {
-            Toast.makeText(context, "Please login to save results", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val saveBtn = view.findViewById<Button>(R.id.save_button)
-        saveBtn?.isEnabled = false
-        saveBtn?.text = "Uploading..."
-
         val file = File(path)
 
-        // If no valid file path, save with empty image_url
         if (path.isEmpty() || !file.exists()) {
-            Log.w(TAG, "No image file found, saving without image")
-            saveScanToDatabase(
-                view      = view,
-                imageUrl  = "",
-                title     = title,
-                className = className,
-                accuracy  = accuracy,
-                scanType  = scanType,
-                token     = token
-            )
+            saveScanToDatabase(view, "", title, className, accuracy, scanType, token, breedId, allBreeds)
             return
         }
 
-        // Build multipart request
         val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
         val imagePart   = MultipartBody.Part.createFormData("image", file.name, requestFile)
-
-        Log.d(TAG, ">>> Uploading image: ${file.name}")
 
         RetrofitClient.instance.uploadImage("Bearer $token", imagePart)
             .enqueue(object : Callback<UploadImageResponse> {
@@ -164,63 +278,47 @@ class DogScanResultFragment : Fragment() {
                     response: Response<UploadImageResponse>
                 ) {
                     val serverImageUrl = response.body()?.image_url
-
-                    Log.d(TAG, ">>> Upload response code: ${response.code()}")
-                    Log.d(TAG, ">>> Server image URL: $serverImageUrl")
-
                     if (response.isSuccessful && !serverImageUrl.isNullOrEmpty()) {
-                        // ✅ STEP 2 — Now save scan with the real server URL
-                        saveBtn?.text = "Saving..."
-                        saveScanToDatabase(
-                            view      = view,
-                            imageUrl  = serverImageUrl,  // ✅ real server URL, not local path
-                            title     = title,
-                            className = className,
-                            accuracy  = accuracy,
-                            scanType  = scanType,
-                            token     = token
-                        )
+                        saveScanToDatabase(view, serverImageUrl, title, className, accuracy, scanType, token, breedId, allBreeds)
                     } else {
-                        Log.e(TAG, ">>> Upload failed: ${response.errorBody()?.string()}")
-                        saveBtn?.isEnabled = true
-                        saveBtn?.text = "Save Result"
-                        Toast.makeText(context, "Image upload failed", Toast.LENGTH_SHORT).show()
+                        activity?.runOnUiThread {
+                            saveBtn?.isEnabled = true
+                            saveBtn?.text = "Save Result"
+                            Toast.makeText(context, "Upload failed: ${response.code()}", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
 
                 override fun onFailure(call: Call<UploadImageResponse>, t: Throwable) {
-                    Log.e(TAG, ">>> Upload error: ${t.message}", t)
-                    saveBtn?.isEnabled = true
-                    saveBtn?.text = "Save Result"
-                    Toast.makeText(context, "Upload error: ${t.message}", Toast.LENGTH_SHORT).show()
+                    activity?.runOnUiThread {
+                        saveBtn?.isEnabled = true
+                        saveBtn?.text = "Save Result"
+                        Toast.makeText(context, "Upload error: ${t.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             })
     }
 
-    // ✅ STEP 2 — Save scan to database using the uploaded server image URL
     private fun saveScanToDatabase(
         view: View,
-        imageUrl: String,   // ✅ now always a server URL like http://192.168.137.1:5000/uploads/abc.jpg
+        imageUrl: String,
         title: String,
         className: String,
         accuracy: Double,
         scanType: String,
-        token: String
+        token: String,
+        breedId: Int = -1,
+        allBreeds: String = ""  // ✅ NEW
     ) {
-        Log.d(TAG, ">>> Saving scan with image_url: $imageUrl")
-
         val saveBtn = view.findViewById<Button>(R.id.save_button)
 
-        val prediction = ScanPrediction(
-            rank         = 1,
-            class_name   = className,
-            display_name = title,
-            confidence   = accuracy
-        )
+        // ✅ Build full predictions list including rank 2, 3, etc.
+        val predictions = parseAllBreeds(allBreeds, className, title, accuracy, breedId)
+        Log.d(TAG, ">>> Saving ${predictions.size} predictions")
 
         val request = SaveScanRequest(
-            image_url   = imageUrl,   // ✅ server URL, not local path
-            predictions = listOf(prediction),
+            image_url   = imageUrl,
+            predictions = predictions,
             scan_type   = scanType
         )
 
@@ -230,29 +328,28 @@ class DogScanResultFragment : Fragment() {
                     call: Call<SaveScanResponse>,
                     response: Response<SaveScanResponse>
                 ) {
-                    Log.d(TAG, ">>> Save code: ${response.code()}")
-                    Log.d(TAG, ">>> Save body: ${response.body()}")
-
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        saveBtn?.text = "Saved ✓"
-                        Toast.makeText(context, "Result saved successfully!", Toast.LENGTH_SHORT).show()
-                        view.findViewById<Button>(R.id.view_history_button)?.visibility = View.VISIBLE
-                    } else {
-                        saveBtn?.isEnabled = true
-                        saveBtn?.text = "Save Result"
-                        Toast.makeText(
-                            context,
-                            "Failed to save: ${response.code()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    if (!isAdded) return
+                    activity?.runOnUiThread {
+                        if (response.isSuccessful && response.body()?.success == true) {
+                            saveBtn?.text = "Saved ✓"
+                            saveBtn?.isEnabled = false
+                            Toast.makeText(context, "Saved to history!", Toast.LENGTH_SHORT).show()
+                            view.findViewById<Button>(R.id.view_history_button)?.visibility = View.VISIBLE
+                        } else {
+                            Log.e(TAG, ">>> Save failed: ${response.code()} ${response.errorBody()?.string()}")
+                            saveBtn?.isEnabled = true
+                            saveBtn?.text = "Save Result"
+                            Toast.makeText(context, "Save failed: ${response.code()}", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
 
                 override fun onFailure(call: Call<SaveScanResponse>, t: Throwable) {
-                    saveBtn?.isEnabled = true
-                    saveBtn?.text = "Save Result"
-                    Log.e(TAG, ">>> Save error: ${t.message}", t)
-                    Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+                    activity?.runOnUiThread {
+                        saveBtn?.isEnabled = true
+                        saveBtn?.text = "Save Result"
+                        Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             })
     }
@@ -264,7 +361,9 @@ class DogScanResultFragment : Fragment() {
             path: String,
             details: String,
             scanType: String = "breed",
-            className: String = ""
+            className: String = "",
+            breedId: Int = -1,
+            allBreeds: String = ""  // ✅ NEW
         ): DogScanResultFragment {
             return DogScanResultFragment().apply {
                 arguments = Bundle().apply {
@@ -274,6 +373,8 @@ class DogScanResultFragment : Fragment() {
                     putString("PATH",       path)
                     putString("DETAILS",    details)
                     putString("CLASS_NAME", className)
+                    putInt("BREED_ID",      breedId)
+                    putString("ALL_BREEDS", allBreeds)  // ✅ NEW
                 }
             }
         }
