@@ -2,7 +2,23 @@ package network.model
 
 import com.google.gson.annotations.SerializedName
 
-// --- PREDICTION MODELS ---
+// ─────────────────────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────────────────────
+
+
+
+// ─────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────
+// PREDICTION MODELS
+// ─────────────────────────────────────────────────────────────
 
 data class BreedResult(
     val breed: String,
@@ -33,7 +49,9 @@ data class DiseaseDetail(
     val severity: String
 )
 
-// --- DATABASE SAVE MODELS ---
+// ─────────────────────────────────────────────────────────────
+// SCAN SAVE MODELS
+// ─────────────────────────────────────────────────────────────
 
 data class SaveBreedRequest(
     val user_email: String,
@@ -62,7 +80,8 @@ data class SaveResponse(
 data class SaveScanRequest(
     @SerializedName("image_url") val image_url: String,
     @SerializedName("predictions") val predictions: List<ScanPrediction>,
-    @SerializedName("scan_type") val scan_type: String = "breed"
+    @SerializedName("scan_type") val scan_type: String = "breed",
+    @SerializedName("share_for_training") val share_for_training: Boolean = false
 )
 
 data class ScanPrediction(
@@ -81,6 +100,10 @@ data class SaveScanResponse(
         get() = scan_id != null
 }
 
+// ─────────────────────────────────────────────────────────────
+// SCAN HISTORY
+// ─────────────────────────────────────────────────────────────
+
 data class ScanHistoryResponse(
     @SerializedName("id") val id: Int?,
     @SerializedName("image_url") val image_url: String?,
@@ -95,7 +118,6 @@ data class ScanHistoryResponse(
         get() = predictions?.minByOrNull { it.rank ?: 99 }?.confidence
 }
 
-// ✅ UPDATED - added breed_info
 data class ScanPredictionItem(
     @SerializedName("id") val id: Int?,
     @SerializedName("rank") val rank: Int?,
@@ -103,10 +125,9 @@ data class ScanPredictionItem(
     @SerializedName("class_name") val class_name: String?,
     @SerializedName("display_name") val display_name: String?,
     @SerializedName("confidence") val confidence: Double?,
-    @SerializedName("breed_info") val breed_info: BreedInfo? // ✅ NEW
+    @SerializedName("breed_info") val breed_info: BreedInfo?
 )
 
-// ✅ NEW - breed_info object from API response
 data class BreedInfo(
     @SerializedName("size") val size: String?,
     @SerializedName("origin") val origin: String?,
@@ -132,6 +153,10 @@ data class UploadImageResponse(
     @SerializedName("image_url") val image_url: String?
 )
 
+// ─────────────────────────────────────────────────────────────
+// PROFILE UPDATE MODELS
+// ─────────────────────────────────────────────────────────────
+
 data class UpdateUsernameRequest(
     @SerializedName("username") val username: String,
     @SerializedName("current_password") val current_password: String
@@ -154,7 +179,10 @@ data class UpdateProfileResponse(
     @SerializedName("error") val error: String? = null
 )
 
-// ✅ NEW - Breed detail response from GET /api/scans/breed/:breedId
+// ─────────────────────────────────────────────────────────────
+// BREED DETAIL
+// ─────────────────────────────────────────────────────────────
+
 data class BreedDetailResponse(
     @SerializedName("breed_id") val breed_id: Int?,
     @SerializedName("class_name") val class_name: String?,
@@ -182,3 +210,75 @@ data class BreedDetailResponse(
     val temperamentText: String?
         get() = temperament?.joinToString(", ")
 }
+
+// ─────────────────────────────────────────────────────────────
+// CONTRIBUTOR / LEADERBOARD MODELS
+// ─────────────────────────────────────────────────────────────
+
+data class LeaderboardEntry(
+    @SerializedName("rank") val rank: Int,
+    @SerializedName("username") val username: String,
+    @SerializedName("approved_count") val approved_count: Int
+)
+
+data class ContributorStats(
+    @SerializedName("approved_count") val approved_count: Int,
+    @SerializedName("pending_count") val pending_count: Int,
+    @SerializedName("rank") val rank: Int?
+)
+
+data class ContributeRequest(
+    @SerializedName("scan_id") val scan_id: Int?,
+    @SerializedName("image_url") val image_url: String,
+    @SerializedName("breed_name") val breed_name: String?,
+    @SerializedName("class_name") val class_name: String?,
+    @SerializedName("confidence") val confidence: Double?
+)
+
+data class ContributeResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("contribution") val contribution: ContributionRecord?
+)
+
+data class ContributionRecord(
+    @SerializedName("id") val id: Int,
+    @SerializedName("status") val status: String,
+    @SerializedName("created_at") val created_at: String
+)
+
+// ─────────────────────────────────────────────────────────────
+// ASSISTANT / CHAT MODELS
+// ─────────────────────────────────────────────────────────────
+
+data class ThreadResponse(
+    @SerializedName("id") val id: Int,
+    @SerializedName("user_id") val user_id: Int,
+    @SerializedName("thread_type") val thread_type: String,
+    @SerializedName("scan_context") val scan_context: Any?,
+    @SerializedName("created_at") val created_at: String,
+    @SerializedName("updated_at") val updated_at: String
+)
+
+data class MessageItem(
+    @SerializedName("id") val id: Int,
+    @SerializedName("thread_id") val thread_id: Int,
+    @SerializedName("role") val role: String,           // "user" | "assistant"
+    @SerializedName("content") val content: String,
+    @SerializedName("created_at") val created_at: String
+)
+
+data class MessagesResponse(
+    @SerializedName("thread") val thread: ThreadResponse,
+    @SerializedName("messages") val messages: List<MessageItem>
+)
+
+data class SendMessageRequest(
+    @SerializedName("message") val message: String
+)
+
+data class SendMessageResponse(
+    @SerializedName("thread_id") val thread_id: Int,
+    @SerializedName("user_message") val user_message: MessageItem,
+    @SerializedName("assistant_message") val assistant_message: MessageItem
+)

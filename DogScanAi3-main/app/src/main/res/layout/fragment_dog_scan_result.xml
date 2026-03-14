@@ -83,7 +83,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- ✅ Breed DB Info Card (hidden until fetched) -->
+        <!-- Breed DB Info Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/card_breed_info"
             android:layout_width="match_parent"
@@ -99,7 +99,6 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Header row: breed image + name + temperament -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -159,14 +158,12 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="#EEEEEE"
                     android:layout_marginBottom="12dp" />
 
-                <!-- Description -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -223,7 +220,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Action Buttons -->
+        <!-- ✅ Retry + Save Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -250,9 +247,25 @@
                 android:backgroundTint="#4A69FF"
                 android:text="Save Result"
                 app:cornerRadius="12dp" />
+
         </LinearLayout>
 
-        <!-- View History Button (hidden until saved) -->
+        <!-- ✅ Contribute Button — breed scan only, full width -->
+        <Button
+            android:id="@+id/contribute_button"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="#FF6B35"
+            android:drawableStart="@drawable/aspin"
+            android:drawablePadding="8dp"
+            android:text="Contribute to Dataset"
+            android:textColor="#FFFFFF"
+            android:visibility="gone"
+            app:cornerRadius="12dp" />
+
+        <!-- ✅ View History Button — hidden until saved -->
         <Button
             android:id="@+id/view_history_button"
             style="@style/Widget.Material3.Button.OutlinedButton"

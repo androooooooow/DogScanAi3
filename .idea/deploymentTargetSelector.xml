@@ -7,7 +7,7 @@
       </SelectionState>
       <SelectionState runConfigName="DogScanAi.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-03-09T07:24:41.668288500Z">
+        <DropdownSelection timestamp="2026-03-12T10:50:58.817235Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=13195704BF003552" />

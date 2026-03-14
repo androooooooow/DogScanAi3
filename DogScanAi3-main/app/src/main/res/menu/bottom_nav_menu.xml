@@ -19,9 +19,9 @@
 
     <!-- THIS ITEM HAS BEEN CHANGED FROM SETTINGS TO INBOX -->
     <item
-        android:id="@+id/navigation_result"
+        android:id="@+id/navigation_contribution"
         android:icon="@drawable/result"
-        android:title="Dog Scan Result" />
+        android:title="Contribution" />
 
     <item
         android:id="@+id/navigation_profile"

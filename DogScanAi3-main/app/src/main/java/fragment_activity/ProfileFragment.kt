@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.accounts.LoginActivity
 import com.firstapp.dogscanai.databinding.ActivityProfileBinding
 

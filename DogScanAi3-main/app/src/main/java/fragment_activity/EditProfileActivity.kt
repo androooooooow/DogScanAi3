@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.databinding.ActivityEditProfileBinding
 import network.api.RetrofitClient
 import network.model.UpdateEmailRequest

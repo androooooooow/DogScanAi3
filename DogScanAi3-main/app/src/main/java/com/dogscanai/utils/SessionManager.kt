@@ -1,4 +1,4 @@
-package com.dogscanai.utils
+package com.firstapp.dogscanai.utils
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -6,7 +6,8 @@ import network.model.User
 import com.google.gson.Gson
 
 class SessionManager(context: Context) {
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
     private val gson = Gson()
 
     companion object {
@@ -20,17 +21,16 @@ class SessionManager(context: Context) {
     fun getToken(): String? = sharedPreferences.getString(KEY_TOKEN, null)
 
     fun saveSession(token: String, user: User) {
-        val editor = sharedPreferences.edit()
-        editor.putString(KEY_TOKEN, token)
-        editor.putString(KEY_USER, gson.toJson(user))
-        editor.apply()
+        sharedPreferences.edit()
+            .putString(KEY_TOKEN, token)
+            .putString(KEY_USER, gson.toJson(user))
+            .apply()
     }
 
-    // ✅ ADD THIS FUNCTION - Para sa pag-save ng token lang
     fun saveToken(token: String) {
-        val editor = sharedPreferences.edit()
-        editor.putString(KEY_TOKEN, token)
-        editor.apply()
+        sharedPreferences.edit()
+            .putString(KEY_TOKEN, token)
+            .apply()
     }
 
     fun getUser(): User? {
@@ -39,25 +39,23 @@ class SessionManager(context: Context) {
     }
 
     fun saveUser(user: User) {
-        val editor = sharedPreferences.edit()
-        val userJson = gson.toJson(user)
-        editor.putString(KEY_USER, userJson)
-        editor.apply()
+        sharedPreferences.edit()
+            .putString(KEY_USER, gson.toJson(user))
+            .apply()
     }
 
     fun setFirstTimeLaunch(isFirstTime: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_FIRST_TIME, isFirstTime).apply()
     }
 
-    fun isFirstTimeLaunch(): Boolean {
-        return sharedPreferences.getBoolean(KEY_FIRST_TIME, true)
-    }
+    fun isFirstTimeLaunch(): Boolean =
+        sharedPreferences.getBoolean(KEY_FIRST_TIME, true)
 
     fun clearSession() {
-        val editor = sharedPreferences.edit()
-        editor.remove(KEY_TOKEN)
-        editor.remove(KEY_USER)
-        editor.apply()
+        sharedPreferences.edit()
+            .remove(KEY_TOKEN)
+            .remove(KEY_USER)
+            .apply()
     }
 
     fun getBearerToken(): String? {

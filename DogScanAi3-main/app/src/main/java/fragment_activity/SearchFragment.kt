@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import com.bumptech.glide.Glide
-import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.FragmentSearchBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

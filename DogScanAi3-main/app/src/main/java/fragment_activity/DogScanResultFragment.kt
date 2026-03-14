@@ -50,7 +50,7 @@ class DogScanResultFragment : Fragment() {
             val details   = arguments?.getString("DETAILS")    ?: "No details available"
             val className = arguments?.getString("CLASS_NAME") ?: ""
             val breedId   = arguments?.getInt("BREED_ID")      ?: -1
-            val allBreeds = arguments?.getString("ALL_BREEDS") ?: ""  // ✅ NEW
+            val allBreeds = arguments?.getString("ALL_BREEDS") ?: ""
 
             // Mode label
             val cardColor = if (scanType == "disease") "#B00020" else "#4A69FF"
@@ -86,7 +86,7 @@ class DogScanResultFragment : Fragment() {
                 fetchBreedDetails(view, breedId)
             }
 
-            // ✅ Manual Save button
+            // ✅ Save button
             val saveBtn = view.findViewById<Button>(R.id.save_button)
             saveBtn?.visibility = View.VISIBLE
             saveBtn?.setOnClickListener {
@@ -102,16 +102,58 @@ class DogScanResultFragment : Fragment() {
                 saveBtn.text = "Saving..."
 
                 uploadImageThenSave(
-                    view      = view,
-                    path      = path ?: "",
-                    title     = title,
-                    className = className,
-                    accuracy  = accuracy,
-                    scanType  = scanType,
-                    token     = token,
-                    breedId   = breedId,
-                    allBreeds = allBreeds  // ✅ NEW
+                    view            = view,
+                    path            = path ?: "",
+                    title           = title,
+                    className       = className,
+                    accuracy        = accuracy,
+                    scanType        = scanType,
+                    token           = token,
+                    breedId         = breedId,
+                    allBreeds       = allBreeds,
+                    shareForTraining = false  // normal save, no contribute
                 )
+            }
+
+            // ✅ Contribute button — only show for breed scans
+            val contributeBtn = view.findViewById<Button>(R.id.contribute_button)
+            if (scanType == "breed") {
+                contributeBtn?.visibility = View.VISIBLE
+                contributeBtn?.setOnClickListener {
+                    val prefs = requireContext().getSharedPreferences("user_session", Context.MODE_PRIVATE)
+                    val token = prefs.getString("token", null)
+
+                    if (token == null) {
+                        Toast.makeText(context, "Please login first", Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
+
+                    // ✅ Confirm dialog before contributing
+                    android.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Contribute to Dataset")
+                        .setMessage("This will save your scan AND share the image with our team to help improve the AI model. Continue?")
+                        .setPositiveButton("Yes, Contribute") { _, _ ->
+                            contributeBtn.isEnabled = false
+                            contributeBtn.text = "Contributing..."
+
+                            uploadImageThenSave(
+                                view             = view,
+                                path             = path ?: "",
+                                title            = title,
+                                className        = className,
+                                accuracy         = accuracy,
+                                scanType         = scanType,
+                                token            = token,
+                                breedId          = breedId,
+                                allBreeds        = allBreeds,
+                                shareForTraining = true  // ✅ contribute mode
+                            )
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            } else {
+                contributeBtn?.visibility = View.GONE
             }
 
             // Retry button
@@ -218,8 +260,13 @@ class DogScanResultFragment : Fragment() {
         }
     }
 
-    // ✅ Parse allBreeds string into ScanPrediction list
-    private fun parseAllBreeds(allBreeds: String, fallbackClassName: String, fallbackTitle: String, fallbackAccuracy: Double, fallbackBreedId: Int): List<ScanPrediction> {
+    private fun parseAllBreeds(
+        allBreeds: String,
+        fallbackClassName: String,
+        fallbackTitle: String,
+        fallbackAccuracy: Double,
+        fallbackBreedId: Int
+    ): List<ScanPrediction> {
         if (allBreeds.isBlank()) {
             return listOf(ScanPrediction(
                 rank         = 1,
@@ -233,17 +280,12 @@ class DogScanResultFragment : Fragment() {
         return allBreeds.split(";;").mapNotNull { entry ->
             val parts = entry.split("|")
             if (parts.size >= 4) {
-                val rank        = parts[0].toIntOrNull() ?: 1
-                val clsName     = parts[1]
-                val dispName    = parts[2]
-                val conf        = parts[3].toDoubleOrNull() ?: 0.0
-                val bId         = parts.getOrNull(4)?.toIntOrNull()
                 ScanPrediction(
-                    rank         = rank,
-                    class_name   = clsName,
-                    display_name = dispName,
-                    confidence   = conf,
-                    breed_id     = bId
+                    rank         = parts[0].toIntOrNull() ?: 1,
+                    class_name   = parts[1],
+                    display_name = parts[2],
+                    confidence   = parts[3].toDoubleOrNull() ?: 0.0,
+                    breed_id     = parts.getOrNull(4)?.toIntOrNull()
                 )
             } else null
         }
@@ -258,13 +300,15 @@ class DogScanResultFragment : Fragment() {
         scanType: String,
         token: String,
         breedId: Int = -1,
-        allBreeds: String = ""  // ✅ NEW
+        allBreeds: String = "",
+        shareForTraining: Boolean = false  // ✅ NEW
     ) {
-        val saveBtn = view.findViewById<Button>(R.id.save_button)
+        val saveBtn       = view.findViewById<Button>(R.id.save_button)
+        val contributeBtn = view.findViewById<Button>(R.id.contribute_button)
         val file = File(path)
 
         if (path.isEmpty() || !file.exists()) {
-            saveScanToDatabase(view, "", title, className, accuracy, scanType, token, breedId, allBreeds)
+            saveScanToDatabase(view, "", title, className, accuracy, scanType, token, breedId, allBreeds, shareForTraining)
             return
         }
 
@@ -279,11 +323,13 @@ class DogScanResultFragment : Fragment() {
                 ) {
                     val serverImageUrl = response.body()?.image_url
                     if (response.isSuccessful && !serverImageUrl.isNullOrEmpty()) {
-                        saveScanToDatabase(view, serverImageUrl, title, className, accuracy, scanType, token, breedId, allBreeds)
+                        saveScanToDatabase(view, serverImageUrl, title, className, accuracy, scanType, token, breedId, allBreeds, shareForTraining)
                     } else {
                         activity?.runOnUiThread {
                             saveBtn?.isEnabled = true
                             saveBtn?.text = "Save Result"
+                            contributeBtn?.isEnabled = true
+                            contributeBtn?.text = "🐾 Contribute to Dataset"
                             Toast.makeText(context, "Upload failed: ${response.code()}", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -293,6 +339,8 @@ class DogScanResultFragment : Fragment() {
                     activity?.runOnUiThread {
                         saveBtn?.isEnabled = true
                         saveBtn?.text = "Save Result"
+                        contributeBtn?.isEnabled = true
+                        contributeBtn?.text = "🐾 Contribute to Dataset"
                         Toast.makeText(context, "Upload error: ${t.message}", Toast.LENGTH_LONG).show()
                     }
                 }
@@ -308,18 +356,20 @@ class DogScanResultFragment : Fragment() {
         scanType: String,
         token: String,
         breedId: Int = -1,
-        allBreeds: String = ""  // ✅ NEW
+        allBreeds: String = "",
+        shareForTraining: Boolean = false  // ✅ NEW
     ) {
-        val saveBtn = view.findViewById<Button>(R.id.save_button)
+        val saveBtn       = view.findViewById<Button>(R.id.save_button)
+        val contributeBtn = view.findViewById<Button>(R.id.contribute_button)
 
-        // ✅ Build full predictions list including rank 2, 3, etc.
         val predictions = parseAllBreeds(allBreeds, className, title, accuracy, breedId)
-        Log.d(TAG, ">>> Saving ${predictions.size} predictions")
+        Log.d(TAG, ">>> Saving ${predictions.size} predictions, contribute=$shareForTraining")
 
         val request = SaveScanRequest(
-            image_url   = imageUrl,
-            predictions = predictions,
-            scan_type   = scanType
+            image_url        = imageUrl,
+            predictions      = predictions,
+            scan_type        = scanType,
+            share_for_training = shareForTraining  // ✅ NEW
         )
 
         RetrofitClient.instance.saveScan("Bearer $token", request)
@@ -331,14 +381,26 @@ class DogScanResultFragment : Fragment() {
                     if (!isAdded) return
                     activity?.runOnUiThread {
                         if (response.isSuccessful && response.body()?.success == true) {
-                            saveBtn?.text = "Saved ✓"
-                            saveBtn?.isEnabled = false
-                            Toast.makeText(context, "Saved to history!", Toast.LENGTH_SHORT).show()
+                            if (shareForTraining) {
+                                // ✅ Contributed successfully
+                                contributeBtn?.text = "✓ Contributed!"
+                                contributeBtn?.isEnabled = false
+                                saveBtn?.text = "Saved ✓"
+                                saveBtn?.isEnabled = false
+                                Toast.makeText(context, "Thank you! Your image has been submitted for review.", Toast.LENGTH_LONG).show()
+                            } else {
+                                // ✅ Normal save
+                                saveBtn?.text = "Saved ✓"
+                                saveBtn?.isEnabled = false
+                                Toast.makeText(context, "Saved to history!", Toast.LENGTH_SHORT).show()
+                            }
                             view.findViewById<Button>(R.id.view_history_button)?.visibility = View.VISIBLE
                         } else {
                             Log.e(TAG, ">>> Save failed: ${response.code()} ${response.errorBody()?.string()}")
                             saveBtn?.isEnabled = true
                             saveBtn?.text = "Save Result"
+                            contributeBtn?.isEnabled = true
+                            contributeBtn?.text = "🐾 Contribute to Dataset"
                             Toast.makeText(context, "Save failed: ${response.code()}", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -348,6 +410,8 @@ class DogScanResultFragment : Fragment() {
                     activity?.runOnUiThread {
                         saveBtn?.isEnabled = true
                         saveBtn?.text = "Save Result"
+                        contributeBtn?.isEnabled = true
+                        contributeBtn?.text = "🐾 Contribute to Dataset"
                         Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_LONG).show()
                     }
                 }
@@ -363,7 +427,7 @@ class DogScanResultFragment : Fragment() {
             scanType: String = "breed",
             className: String = "",
             breedId: Int = -1,
-            allBreeds: String = ""  // ✅ NEW
+            allBreeds: String = ""
         ): DogScanResultFragment {
             return DogScanResultFragment().apply {
                 arguments = Bundle().apply {
@@ -374,7 +438,7 @@ class DogScanResultFragment : Fragment() {
                     putString("DETAILS",    details)
                     putString("CLASS_NAME", className)
                     putInt("BREED_ID",      breedId)
-                    putString("ALL_BREEDS", allBreeds)  // ✅ NEW
+                    putString("ALL_BREEDS", allBreeds)
                 }
             }
         }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="28dp"
+    android:viewportWidth="28"
+    android:viewportHeight="28">
+    <!-- Crown base bar -->
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M5,20 L23,20 L23,23 L5,23 Z"/>
+    <!-- Crown body -->
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M5,20 L5,11 L9.5,15 L14,7 L18.5,15 L23,11 L23,20 Z"/>
+    <!-- Shine dot center -->
+    <path
+        android:fillColor="#EEEEEE"
+        android:pathData="M14,10.8 A1.2,1.2 0 1,1 14,10.799 Z"/>
+    <!-- Shine dot left -->
+    <path
+        android:fillColor="#EEEEEE"
+        android:pathData="M8,14.1 A0.9,0.9 0 1,1 8,14.099 Z"/>
+    <!-- Shine dot right -->
+    <path
+        android:fillColor="#EEEEEE"
+        android:pathData="M20,14.1 A0.9,0.9 0 1,1 20,14.099 Z"/>
+</vector>

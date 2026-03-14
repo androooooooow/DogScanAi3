@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
-import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.accounts.LoginActivity
 import com.firstapp.dogscanai.accounts.DashboardActivity

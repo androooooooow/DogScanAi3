@@ -7,9 +7,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.databinding.ActivityDashboardBinding
-import com.firstapp.dogscanai.fragment_activity.HomeFragment
 import fragment_activity.CameraActivity
-import fragment_activity.DogScanResultFragment
+import fragment_activity.ContributorLeaderboardFragment
+import fragment_activity.HomeFragment
 import fragment_activity.ProfileFragment
 import fragment_activity.SearchFragment
 import inbox.InboxFragment
@@ -34,13 +34,11 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        // Change selected item background from purple to blue
         binding.bottomNavigationView.itemActiveIndicatorColor =
             android.content.res.ColorStateList.valueOf(
                 androidx.core.content.ContextCompat.getColor(this, R.color.blue)
             )
 
-        // Change ripple/hover color from purple to blue
         binding.bottomNavigationView.itemRippleColor =
             android.content.res.ColorStateList.valueOf(
                 androidx.core.content.ContextCompat.getColor(this, R.color.blue)
@@ -50,7 +48,7 @@ class DashboardActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.navigation_home -> { loadFragment(HomeFragment()); true }
                 R.id.navigation_search -> { loadFragment(SearchFragment()); true }
-                R.id.navigation_result -> { loadFragment(DogScanResultFragment()); true }
+                R.id.navigation_contribution -> { loadFragment(ContributorLeaderboardFragment()); true }
                 R.id.navigation_profile -> { loadFragment(ProfileFragment()); true }
                 else -> false
             }

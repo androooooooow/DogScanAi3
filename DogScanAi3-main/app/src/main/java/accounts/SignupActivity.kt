@@ -7,7 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.dogscanai.models.ErrorResponse
-import com.dogscanai.utils.SessionManager
+import com.firstapp.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.databinding.ActivitySignupBinding
 import com.google.gson.Gson
 import kotlinx.coroutines.launch

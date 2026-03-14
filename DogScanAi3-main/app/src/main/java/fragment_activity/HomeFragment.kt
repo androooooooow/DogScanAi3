@@ -1,4 +1,4 @@
-package com.firstapp.dogscanai.fragment_activity
+package fragment_activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,13 +6,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.dogscanai.utils.SessionManager
 import com.firstapp.dogscanai.R
-import fragment_activity.CameraActivity
-import fragment_activity.ScanHistoryActivity
+import com.firstapp.dogscanai.utils.SessionManager
 import network.api.RetrofitClient
 import network.model.ScanHistoryResponse
 import retrofit2.Call
@@ -38,24 +35,29 @@ class HomeFragment : Fragment() {
 
         sessionManager = SessionManager(requireContext())
 
-        // Show username
         val user = sessionManager.getUser()
         view.findViewById<TextView>(R.id.tv_username)?.text = user?.username ?: "User"
 
-        // History button (top right)
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_scan_new)
+            ?.setOnClickListener {
+                startActivity(Intent(requireContext(), CameraActivity::class.java))
+            }
 
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_history)
+            ?.setOnClickListener {
+                startActivity(Intent(requireContext(), ScanHistoryActivity::class.java))
+            }
 
-        // Quick Action - Scan New → go to CameraActivity
-        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_scan_new)?.setOnClickListener {
-            startActivity(Intent(requireContext(), CameraActivity::class.java))
-        }
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_contributer)
+            ?.setOnClickListener {
+                startActivity(Intent(requireContext(), ContributorLeaderboardActivity::class.java))
+            }
 
-        // Quick Action - History → go to ScanHistoryActivity
-        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_history)?.setOnClickListener {
-            startActivity(Intent(requireContext(), ScanHistoryActivity::class.java))
-        }
+        view.findViewById<androidx.cardview.widget.CardView>(R.id.card_chatbot)
+            ?.setOnClickListener {
+                startActivity(Intent(requireContext(), ChatActivity::class.java))
+            }
 
-        // Load real scan counts
         loadScanStats(view)
     }
 
@@ -84,15 +86,17 @@ class HomeFragment : Fragment() {
 
                     if (response.isSuccessful) {
                         val scans = response.body() ?: emptyList()
-
                         val totalScans = scans.size
-
                         val thisWeek = scans.count { scan ->
                             try {
-                                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+                                val sdf = SimpleDateFormat(
+                                    "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                                    Locale.getDefault()
+                                )
                                 sdf.timeZone = TimeZone.getTimeZone("UTC")
                                 val scanTime = sdf.parse(scan.scanned_at ?: "")?.time ?: 0L
-                                val diffDays = (System.currentTimeMillis() - scanTime) / (1000 * 60 * 60 * 24)
+                                val diffDays =
+                                    (System.currentTimeMillis() - scanTime) / (1000 * 60 * 60 * 24)
                                 diffDays in 0..7
                             } catch (e: Exception) { false }
                         }
@@ -106,7 +110,10 @@ class HomeFragment : Fragment() {
                     }
                 }
 
-                override fun onFailure(call: Call<List<ScanHistoryResponse>>, t: Throwable) {
+                override fun onFailure(
+                    call: Call<List<ScanHistoryResponse>>,
+                    t: Throwable
+                ) {
                     Log.e("HomeFragment", "Failed to load scan stats: ${t.message}")
                 }
             })
