@@ -54,6 +54,18 @@
         <activity
             android:name="fragment_activity.ChatActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".accounts.ForgotPasswordActivity"
+            android:exported="false" />
+
+        <!-- Google Sign-In -->
+        <activity
+            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
     </application>
 
 </manifest>

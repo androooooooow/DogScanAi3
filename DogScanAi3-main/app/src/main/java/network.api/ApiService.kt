@@ -32,6 +32,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
@@ -50,11 +51,17 @@ interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
+    @POST("api/auth/google")
+    suspend fun googleAuth(@Body body: Map<String, String>): Response<AuthResponse>
+
     @GET("api/auth/me")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
 
     @POST("api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ApiResponse<Unit>>
+
+    @POST("api/auth/forgot-password")
+    suspend fun forgotPassword(@Body body: Map<String, String>): Response<Map<String, String>>
 
     // ─────────────────────────────────────────────────────────
     // PROFILE
@@ -130,6 +137,12 @@ interface ApiService {
     @GET("api/scans/public/usage")
     fun getPublicScanUsage(): Call<ResponseBody>
 
+    @PATCH("api/scans/{id}/contribute")
+    fun contributeScan(
+        @Header("Authorization") token: String,
+        @Path("id") scanId: Int
+    ): Call<SaveScanResponse>
+
     // ─────────────────────────────────────────────────────────
     // CONTRIBUTIONS & LEADERBOARD
     // ─────────────────────────────────────────────────────────
@@ -150,27 +163,19 @@ interface ApiService {
 
     // ─────────────────────────────────────────────────────────
     // ASSISTANT / CHAT
-    // Matches routes in assistant.js:
-    //   POST  /api/assistant/threads/general
-    //   POST  /api/assistant/threads/scan
-    //   GET   /api/assistant/threads/:threadId/messages
-    //   POST  /api/assistant/threads/:threadId/messages
     // ─────────────────────────────────────────────────────────
 
-    /** Get or create the general chat thread for the logged-in user. */
     @POST("api/assistant/threads/general")
     suspend fun createGeneralThread(
         @Header("Authorization") token: String
     ): ThreadResponse
 
-    /** Create a new scan-specific thread (pass scan_context in body). */
     @POST("api/assistant/threads/scan")
     suspend fun createScanThread(
         @Header("Authorization") token: String,
         @Body body: Map<String, Any>
     ): ThreadResponse
 
-    /** Load message history for a thread. */
     @GET("api/assistant/threads/{threadId}/messages")
     suspend fun getMessages(
         @Header("Authorization") token: String,
@@ -178,7 +183,6 @@ interface ApiService {
         @Query("limit") limit: Int = 50
     ): MessagesResponse
 
-    /** Send a message and get the assistant reply. */
     @POST("api/assistant/threads/{threadId}/messages")
     suspend fun sendMessage(
         @Header("Authorization") token: String,

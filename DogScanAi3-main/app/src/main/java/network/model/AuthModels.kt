@@ -1,5 +1,7 @@
 package network.model
 
+import com.google.gson.annotations.SerializedName
+
 // ❌ BURAHIN MO YUNG IMPORT ANDROID SERVICE AUTOFILL DITO KUNG MERON MAN
 
 // Request models
@@ -19,11 +21,12 @@ data class AuthResponse(
 
 
 
-// Ito ang iyong sariling User model
 data class User(
     val id: String,
     val username: String,
-    val email: String
+    val email: String,
+    @SerializedName("is_admin") val is_admin: Boolean? = false,
+    @SerializedName("is_superadmin") val is_superadmin: Boolean? = false
 )
 
 data class ProfileResponse(

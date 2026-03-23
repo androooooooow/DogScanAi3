@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -21,12 +22,11 @@ import com.firstapp.dogscanai.fragment_activity.MessageRole
 import com.firstapp.dogscanai.utils.SessionManager
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
+import network.api.ApiService
+import network.model.SendMessageRequest
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 class ChatActivity : AppCompatActivity() {
@@ -37,17 +37,16 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var typingIndicator: LinearLayout
     private lateinit var adapter: ChatAdapter
     private lateinit var sessionManager: SessionManager
+    private lateinit var apiService: ApiService
 
     private val messages = mutableListOf<ChatMessage>()
-    private val history = mutableListOf<JSONObject>()
+    private var threadId: Int? = null
     private var isLoading = false
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .build()
-
-    private val BASE_URL = "http://192.168.137.1:5001"
+    companion object {
+        private const val TAG = "ChatActivity"
+        private const val BASE_URL = "http://192.168.137.1:5000/"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +62,96 @@ class ChatActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
+        // ← OkHttpClient with generous timeouts for Ollama
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(180, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+
+        apiService = Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+
         setupRecyclerView()
         setupInput()
 
-        // Welcome message
-        addAssistantMessage("Hello! I'm Casper, your DogScan AI assistant 🐾 How can I help you today?")
+        btnSend.isEnabled = false
+
+        lifecycleScope.launch { initThread() }
     }
+
+    // ─── Thread & History Init ────────────────────────────────────────────────
+
+    private suspend fun initThread() {
+        Log.d(TAG, "initThread() started")
+
+        val token = sessionManager.getBearerToken()
+        if (token == null) {
+            Log.e(TAG, "Token is null — user not logged in")
+            showErrorMessage("Not logged in. Please restart the app.")
+            return
+        }
+
+        Log.d(TAG, "Token OK: $token")
+
+        try {
+            Log.d(TAG, "Calling createGeneralThread...")
+            val thread = apiService.createGeneralThread(token)
+            threadId = thread.id
+            Log.d(TAG, "Thread ready — id=${thread.id}, type=${thread.thread_type}")
+
+            Log.d(TAG, "Loading messages for thread ${thread.id}...")
+            val response = apiService.getMessages(token, thread.id, limit = 50)
+            Log.d(TAG, "Messages loaded: ${response.messages.size} message(s)")
+
+            if (response.messages.isEmpty()) {
+                addAssistantMessage(
+                    "Hello! I'm Casper, your DogScan AI assistant 🐾 How can I help you today?"
+                )
+            } else {
+                response.messages.forEach { msg ->
+                    messages.add(
+                        ChatMessage(
+                            id        = msg.id,
+                            content   = msg.content,
+                            role      = if (msg.role == "assistant") MessageRole.ASSISTANT
+                            else MessageRole.USER,
+                            createdAt = msg.created_at
+                        )
+                    )
+                }
+                adapter.notifyDataSetChanged()
+                scrollToBottom()
+            }
+
+            btnSend.isEnabled = true
+            Log.d(TAG, "initThread() complete — send button enabled")
+
+        } catch (e: retrofit2.HttpException) {
+            val code = e.code()
+            val errorBody = e.response()?.errorBody()?.string()
+            Log.e(TAG, "HTTP $code — $errorBody")
+            showErrorMessage("Server error $code. Check your Node.js server.")
+
+        } catch (e: java.net.ConnectException) {
+            Log.e(TAG, "ConnectException — can't reach server: ${e.message}")
+            showErrorMessage("Can't connect to server. Check your IP and that Node.js is running.")
+
+        } catch (e: java.net.SocketTimeoutException) {
+            Log.e(TAG, "Timeout — server took too long: ${e.message}")
+            showErrorMessage("Connection timed out. Check your network.")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error: ${e.javaClass.simpleName}: ${e.message}")
+            showErrorMessage("Could not load chat. (${e.javaClass.simpleName}: ${e.message})")
+        }
+    }
+
+    // ─── RecyclerView ─────────────────────────────────────────────────────────
 
     private fun setupRecyclerView() {
         adapter = ChatAdapter(messages) { message -> copyToClipboard(message) }
@@ -80,6 +163,8 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    // ─── Input ────────────────────────────────────────────────────────────────
+
     private fun setupInput() {
         btnSend.setOnClickListener { sendMessage() }
         etMessage.setOnEditorActionListener { _, actionId, _ ->
@@ -90,9 +175,20 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    // ─── Send Message ─────────────────────────────────────────────────────────
+
     private fun sendMessage() {
         val text = etMessage.text.toString().trim()
         if (text.isEmpty() || isLoading) return
+
+        val tid = threadId
+        if (tid == null) {
+            Log.e(TAG, "sendMessage() called but threadId is null")
+            showErrorMessage("Chat not ready yet. Please wait a moment and try again.")
+            return
+        }
+
+        Log.d(TAG, "Sending message to thread $tid: \"$text\"")
 
         etMessage.setText("")
         addUserMessage(text)
@@ -100,30 +196,63 @@ class ChatActivity : AppCompatActivity() {
         isLoading = true
         btnSend.isEnabled = false
 
-        // Add to history
-        history.add(JSONObject().apply {
-            put("role", "user")
-            put("content", text)
-        })
-
         lifecycleScope.launch {
-            try {
-                val reply = callAssistantApi(text)
+            val token = sessionManager.getBearerToken()
+            if (token == null) {
+                Log.e(TAG, "Token gone during sendMessage")
                 showTypingIndicator(false)
-                addAssistantMessage(reply)
+                showErrorMessage("Session expired. Please log in again.")
+                isLoading = false
+                btnSend.isEnabled = true
+                return@launch
+            }
 
-                // Add assistant reply to history
-                history.add(JSONObject().apply {
-                    put("role", "assistant")
-                    put("content", reply)
-                })
+            try {
+                val result = apiService.sendMessage(
+                    token,
+                    tid,
+                    SendMessageRequest(text)
+                )
 
-                // Keep history to last 6 turns
-                while (history.size > 12) history.removeAt(0)
+                Log.d(TAG, "Reply received: ${result.assistant_message.content.take(80)}...")
+                showTypingIndicator(false)
+
+                // Update optimistic user bubble with DB-persisted record
+                val lastUserIndex = messages.indexOfLast { it.role == MessageRole.USER }
+                if (lastUserIndex != -1) {
+                    messages[lastUserIndex] = ChatMessage(
+                        id        = result.user_message.id,
+                        content   = result.user_message.content,
+                        role      = MessageRole.USER,
+                        createdAt = result.user_message.created_at
+                    )
+                    adapter.notifyItemChanged(lastUserIndex)
+                }
+
+                addAssistantMessage(result.assistant_message.content)
+
+            } catch (e: retrofit2.HttpException) {
+                val code = e.code()
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e(TAG, "HTTP $code on sendMessage — $errorBody")
+                showTypingIndicator(false)
+                showErrorMessage("Server error $code. Try again.")
+
+            } catch (e: java.net.ConnectException) {
+                Log.e(TAG, "ConnectException on sendMessage: ${e.message}")
+                showTypingIndicator(false)
+                showErrorMessage("Can't connect to server. Check your network.")
+
+            } catch (e: java.net.SocketTimeoutException) {
+                Log.e(TAG, "Timeout on sendMessage: ${e.message}")
+                showTypingIndicator(false)
+                showErrorMessage("Request timed out. Try again.")
 
             } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error on sendMessage: ${e.javaClass.simpleName}: ${e.message}")
                 showTypingIndicator(false)
-                showError("Could not connect to assistant. Please try again.")
+                showErrorMessage("Could not send message. (${e.javaClass.simpleName})")
+
             } finally {
                 isLoading = false
                 btnSend.isEnabled = true
@@ -131,34 +260,7 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun callAssistantApi(message: String): String {
-        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            val historyArray = JSONArray()
-            for (item in history.dropLast(1)) { // exclude last user msg already added
-                historyArray.put(item)
-            }
-
-            val body = JSONObject().apply {
-                put("message", message)
-                put("thread_type", "general")
-                put("history", historyArray)
-            }
-
-            val request = Request.Builder()
-                .url("$BASE_URL/assistant/chat")
-                .post(body.toString().toRequestBody("application/json".toMediaType()))
-                .build()
-
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string() ?: throw Exception("Empty response")
-
-            if (!response.isSuccessful) {
-                throw Exception("Server error: ${response.code}")
-            }
-
-            JSONObject(responseBody).getString("reply")
-        }
-    }
+    // ─── UI Helpers ───────────────────────────────────────────────────────────
 
     private fun addUserMessage(text: String) {
         messages.add(ChatMessage(content = text, role = MessageRole.USER))
@@ -172,14 +274,18 @@ class ChatActivity : AppCompatActivity() {
         scrollToBottom()
     }
 
-    private fun showTypingIndicator(show: Boolean) {
-        typingIndicator.visibility = if (show) View.VISIBLE else View.GONE
+    private fun showErrorMessage(msg: String) {
+        runOnUiThread {
+            messages.add(ChatMessage(content = msg, role = MessageRole.ERROR))
+            adapter.notifyItemInserted(messages.size - 1)
+            scrollToBottom()
+        }
     }
 
-    private fun showError(message: String) {
-        messages.add(ChatMessage(content = message, role = MessageRole.ERROR))
-        adapter.notifyItemInserted(messages.size - 1)
-        scrollToBottom()
+    private fun showTypingIndicator(show: Boolean) {
+        runOnUiThread {
+            typingIndicator.visibility = if (show) View.VISIBLE else View.GONE
+        }
     }
 
     private fun scrollToBottom() {

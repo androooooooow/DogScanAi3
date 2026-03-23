@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import com.firstapp.dogscanai.R
 import com.firstapp.dogscanai.models.DogScannerResponse
+import com.firstapp.dogscanai.views.ScanFrameView
 import network.api.FlaskClient
 import network.model.DiseaseResponse
 import retrofit2.Call
@@ -56,57 +57,77 @@ class CameraActivity : AppCompatActivity() {
             )
         }
 
+        setupButtons()
+        updateToggleUI()
+    }
+
+    private fun setupButtons() {
+        // Mode toggle
         findViewById<Button>(R.id.btn_breed).setOnClickListener {
             isBreedMode = true
             updateToggleUI()
         }
-
         findViewById<Button>(R.id.btn_disease).setOnClickListener {
             isBreedMode = false
             updateToggleUI()
         }
 
+        // Capture
         findViewById<ImageButton>(R.id.capture_button).setOnClickListener {
             takePhoto()
         }
 
+        // Upload from gallery
         findViewById<LinearLayout>(R.id.upload_button).setOnClickListener {
             openGallery()
         }
 
-        updateToggleUI()
+        // History — ✅ new button
+        findViewById<LinearLayout>(R.id.history_button).setOnClickListener {
+            startActivity(Intent(this, ScanHistoryActivity::class.java))
+        }
+
     }
 
     private fun updateToggleUI() {
-        val btnBreed     = findViewById<Button>(R.id.btn_breed)
-        val btnDisease   = findViewById<Button>(R.id.btn_disease)
-        val scanHint     = findViewById<TextView>(R.id.scan_hint)
-        val captureLabel = findViewById<TextView>(R.id.capture_label)
+        val btnBreed      = findViewById<Button>(R.id.btn_breed)
+        val btnDisease    = findViewById<Button>(R.id.btn_disease)
+        val scanHint      = findViewById<TextView>(R.id.scan_hint)
+        val captureLabel  = findViewById<TextView>(R.id.capture_label)
+        val tvTipTitle    = findViewById<TextView>(R.id.tv_tip_title)
+        val tvTipSubtitle = findViewById<TextView>(R.id.tv_tip_subtitle)
 
         if (isBreedMode) {
-            btnBreed.setBackgroundResource(R.drawable.toggle_selected_bg)
-            btnBreed.backgroundTintList = ContextCompat.getColorStateList(this, R.color.blue)
+            // Breed active — blue
+            btnBreed.setBackgroundResource(R.drawable.bg_toggle_active_breed)
             btnBreed.setTextColor(android.graphics.Color.WHITE)
 
-            btnDisease.setBackgroundResource(0)
-            btnDisease.backgroundTintList = null
-            btnDisease.setTextColor(android.graphics.Color.parseColor("#AAAAAA"))
+            // Disease inactive
+            btnDisease.setBackgroundResource(android.R.color.transparent)
+            btnDisease.setTextColor(android.graphics.Color.parseColor("#88888888"))
 
-            scanHint.text     = "Position the dog to identify its breed"
-            captureLabel.text = "Scan Breed"
+            scanHint.text      = "Position dog here"
+            captureLabel.text  = "SCAN BREED"
+            tvTipTitle.text    = "Breed scan"
+            tvTipSubtitle.text = "Full body visible works best"
+
         } else {
-            btnDisease.setBackgroundResource(R.drawable.toggle_selected_bg)
-            btnDisease.backgroundTintList = ContextCompat.getColorStateList(this, R.color.blue)
+            // Disease active — red
+            btnDisease.setBackgroundResource(R.drawable.bg_toggle_active_disease)
             btnDisease.setTextColor(android.graphics.Color.WHITE)
 
-            btnBreed.setBackgroundResource(0)
-            btnBreed.backgroundTintList = null
-            btnBreed.setTextColor(android.graphics.Color.parseColor("#AAAAAA"))
+            // Breed inactive
+            btnBreed.setBackgroundResource(android.R.color.transparent)
+            btnBreed.setTextColor(android.graphics.Color.parseColor("#88888888"))
 
-            scanHint.text     = "Position the affected area to detect disease"
-            captureLabel.text = "Scan Disease"
+            scanHint.text      = "Focus on skin/coat area"
+            captureLabel.text  = "SCAN DISEASE"
+            tvTipTitle.text    = "Disease scan"
+            tvTipSubtitle.text = "Close-up of affected area"
         }
     }
+
+    // ─── Image helpers ───────────────────────────────────────────────────────
 
     private fun compressAndEncode(file: File): String {
         val original = BitmapFactory.decodeFile(file.absolutePath)
@@ -118,9 +139,9 @@ class CameraActivity : AppCompatActivity() {
         )
         val matrix = Matrix()
         when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90  -> matrix.postRotate(90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            ExifInterface.ORIENTATION_ROTATE_90       -> matrix.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180      -> matrix.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270      -> matrix.postRotate(270f)
             ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1f, 1f)
             ExifInterface.ORIENTATION_FLIP_VERTICAL   -> matrix.preScale(1f, -1f)
         }
@@ -154,6 +175,8 @@ class CameraActivity : AppCompatActivity() {
         tempFile.writeBytes(bytes)
         return compressAndEncode(tempFile)
     }
+
+    // ─── Gallery ─────────────────────────────────────────────────────────────
 
     private fun openGallery() {
         try {
@@ -218,6 +241,8 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    // ─── Camera ──────────────────────────────────────────────────────────────
+
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -271,6 +296,8 @@ class CameraActivity : AppCompatActivity() {
             })
     }
 
+    // ─── API calls ───────────────────────────────────────────────────────────
+
     private fun uploadBreedImage(base64: String, imagePath: String) {
         Toast.makeText(this, "Identifying breed...", Toast.LENGTH_SHORT).show()
 
@@ -286,13 +313,13 @@ class CameraActivity : AppCompatActivity() {
                         else Toast.makeText(this@CameraActivity, "Empty response", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.e(TAG, "Breed error: ${response.code()} - ${response.errorBody()?.string()}")
-                        Toast.makeText(this@CameraActivity, "Server error (${response.code()})", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@CameraActivity, "Please Upload or Scan a Real Dog (${response.code()})", Toast.LENGTH_LONG).show()
                     }
                 }
 
                 override fun onFailure(call: Call<DogScannerResponse>, t: Throwable) {
                     Log.e(TAG, "Network failure", t)
-                    Toast.makeText(this@CameraActivity, "Network error: ${t.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@CameraActivity, "Please Check Your FlaskAPI: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             })
     }
@@ -323,12 +350,14 @@ class CameraActivity : AppCompatActivity() {
             })
     }
 
+    // ─── Show results ────────────────────────────────────────────────────────
+
     private fun showBreedResult(data: DogScannerResponse, path: String) {
         try {
             hideCamera()
 
-            val top = data.top_breeds.firstOrNull()
-            val breed      = top?.display_name ?: top?.class_name ?: "Unknown"
+            val top       = data.top_breeds.firstOrNull()
+            val breed     = top?.display_name ?: top?.class_name ?: "Unknown"
             val confidence = top?.confidence ?: 0.0
             val className  = top?.class_name ?: ""
             val breedId    = top?.breed_id?.toIntOrNull() ?: -1
@@ -336,7 +365,6 @@ class CameraActivity : AppCompatActivity() {
             Log.d(TAG, ">>> top_breeds[0] = ${data.top_breeds[0]}")
             Log.d(TAG, ">>> breed_id raw = ${top?.breed_id}")
 
-            // ✅ Build all predictions string to pass to fragment
             val allBreeds = data.top_breeds.mapIndexed { i, b ->
                 "${i + 1}|${b.class_name ?: ""}|${b.display_name ?: b.class_name ?: "Unknown"}|${b.confidence ?: 0.0}|${b.breed_id ?: ""}"
             }.joinToString(";;")
@@ -361,7 +389,7 @@ class CameraActivity : AppCompatActivity() {
                     scanType  = "breed",
                     className = className,
                     breedId   = breedId,
-                    allBreeds = allBreeds  // ✅ NEW
+                    allBreeds = allBreeds
                 ))
                 .addToBackStack("result")
                 .commit()
@@ -378,7 +406,6 @@ class CameraActivity : AppCompatActivity() {
 
             val top = data.top_diseases.firstOrNull()
 
-            // ✅ Build all disease predictions string
             val allDiseases = data.top_diseases.mapIndexed { i, d ->
                 "${i + 1}|${d.class_name ?: ""}|${d.display_name ?: d.class_name ?: "Unknown"}|${d.confidence ?: 0.0}|"
             }.joinToString(";;")
@@ -403,7 +430,7 @@ class CameraActivity : AppCompatActivity() {
                     details   = details,
                     scanType  = "disease",
                     className = top?.class_name   ?: "",
-                    allBreeds = allDiseases  // ✅ NEW
+                    allBreeds = allDiseases
                 ))
                 .addToBackStack("result")
                 .commit()
@@ -414,12 +441,19 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    // ─── Hide camera UI when showing results ─────────────────────────────────
+
     private fun hideCamera() {
-        findViewById<PreviewView>(R.id.previewView).visibility  = View.GONE
-        findViewById<View>(R.id.bottom_actions).visibility      = View.GONE
-        findViewById<View>(R.id.filter_toggle).visibility       = View.GONE
-        findViewById<View>(R.id.scan_frame).visibility          = View.GONE
-        findViewById<TextView>(R.id.scan_hint).visibility       = View.GONE
+        findViewById<PreviewView>(R.id.previewView).visibility     = View.GONE
+        findViewById<View>(R.id.bottom_actions).visibility         = View.GONE
+        findViewById<View>(R.id.filter_toggle).visibility          = View.GONE
+        findViewById<ScanFrameView>(R.id.scan_frame).visibility    = View.GONE
+        findViewById<TextView>(R.id.scan_hint).visibility          = View.GONE
+        findViewById<View>(R.id.tip_card).visibility               = View.GONE
+        findViewById<View>(R.id.gradient_top).visibility           = View.GONE
+        findViewById<View>(R.id.gradient_bottom).visibility        = View.GONE
+        findViewById<View>(R.id.tv_app_name).visibility            = View.GONE
+
     }
 
     private fun allPermissionsGranted() =

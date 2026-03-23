@@ -90,4 +90,6 @@ dependencies {
 
     implementation("androidx.exifinterface:exifinterface:1.3.6")
 
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
 }

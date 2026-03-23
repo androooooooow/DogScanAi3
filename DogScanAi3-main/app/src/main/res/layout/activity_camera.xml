@@ -1,7 +1,10 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#111111">
 
     <!-- Camera Preview -->
     <androidx.camera.view.PreviewView
@@ -9,130 +12,304 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Dark gradient overlay top -->
+    <View
+        android:id="@+id/gradient_top"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:background="@drawable/gradient_top_overlay"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Dark gradient overlay bottom -->
+    <View
+        android:id="@+id/gradient_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@drawable/gradient_bottom_overlay"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <!-- Overlay Fragment Container -->
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Top Filter Toggle: Breed | Disease -->
+    <!-- ── TOP BAR ── -->
+
+
+    <TextView
+        android:id="@+id/tv_app_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.02"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <!-- ── MODE TOGGLE (Breed | Disease) ── -->
     <LinearLayout
         android:id="@+id/filter_toggle"
         android:layout_width="wrap_content"
-        android:layout_height="44dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
         android:orientation="horizontal"
-        android:padding="4dp">
 
-        <Button
+        android:padding="3dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_app_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_breed"
-            android:layout_width="120dp"
+            android:layout_width="110dp"
             android:layout_height="match_parent"
             android:text="Breed"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:backgroundTint="#4A69FF"
-            />
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02"
+            android:background="@drawable/bg_toggle_active_breed"
+            android:stateListAnimator="@null"
+            app:backgroundTint="@null"
+            app:cornerRadius="16dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_disease"
-            android:layout_width="120dp"
+            android:layout_width="110dp"
             android:layout_height="match_parent"
-            android:background="@android:color/transparent"
             android:text="Disease"
-            android:textColor="#AAAAAA"
-            android:textSize="13sp" />
-
+            android:textColor="#88888888"
+            android:textSize="12sp"
+            android:background="@android:color/transparent"
+            android:stateListAnimator="@null"
+            app:backgroundTint="@null"
+            app:cornerRadius="16dp" />
     </LinearLayout>
 
-    <!-- Scan Frame Overlay -->
-    <ImageView
+    <!-- ── SCAN FRAME (corners only via custom view) ── -->
+    <com.firstapp.dogscanai.views.ScanFrameView
         android:id="@+id/scan_frame"
-        android:layout_width="260dp"
-        android:layout_height="260dp"
-        android:layout_centerInParent="true"
-        android:alpha="0.7" />
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.42" />
 
-    <!-- Dynamic Hint Label -->
+    <!-- ── SCAN HINT ── -->
     <TextView
         android:id="@+id/scan_hint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/scan_frame"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
-        android:text="Position the dog to identify its breed"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp" />
+        android:layout_marginTop="16dp"
+        android:text="Position dog here"
+        android:textColor="#66FFFFFF"
+        android:textSize="12sp"
+        android:letterSpacing="0.02"
+        app:layout_constraintTop_toBottomOf="@id/scan_frame"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottom Actions: Upload + Scan -->
+    <!-- ── TIP CARD ── -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/tip_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="#1AFFFFFF"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_actions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <!-- Shield icon bg -->
+            <FrameLayout
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_tip_icon">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/sheild"
+                    android:tint="#4A69FF" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:id="@+id/tv_tip_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Breed scan"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_tip_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Full body visible works best"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- ── BOTTOM ACTIONS ── -->
     <LinearLayout
         android:id="@+id/bottom_actions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="36dp"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- ✅ Upload Button — children are NOT clickable so parent gets the touch -->
+        <!-- Upload button -->
         <LinearLayout
             android:id="@+id/upload_button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="36dp"
-            android:gravity="center"
+            android:layout_weight="1"
             android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true"
             android:padding="8dp">
 
-            <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/ic_inbox"
-                android:contentDescription="Upload photo from gallery"
-                android:clickable="false"
-                android:focusable="false"
-                android:tint="#FFFFFF" />
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_icon_button_dark">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/baseline_insert_photo_24"
+                    android:tint="#CCCCCC"
+                    android:clickable="false"
+                    android:focusable="false" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="5dp"
                 android:text="Upload"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textColor="#66FFFFFF"
+                android:textSize="10sp"
+                android:letterSpacing="0.03"
                 android:clickable="false"
                 android:focusable="false" />
         </LinearLayout>
 
-        <!-- Scan / Capture Button -->
+        <!-- Main Scan / Capture button -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/capture_button"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/outline_photo_camera_24"
-                android:contentDescription="Scan" />
+                android:tint="#FFFFFF"
+                android:background="@drawable/bg_capture_button"
+                android:contentDescription="Scan"
+                android:padding="18dp" />
 
             <TextView
                 android:id="@+id/capture_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Scan Breed"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
+                android:text="SCAN BREED"
+                android:textColor="#99FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+        </LinearLayout>
+
+        <!-- History button -->
+        <LinearLayout
+            android:id="@+id/history_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp">
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_icon_button_dark">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/baseline_history_24"
+                    android:tint="#CCCCCC"
+                    android:clickable="false"
+                    android:focusable="false" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="History"
+                android:textColor="#66FFFFFF"
+                android:textSize="10sp"
+                android:letterSpacing="0.03"
+                android:clickable="false"
+                android:focusable="false" />
         </LinearLayout>
 
     </LinearLayout>
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
